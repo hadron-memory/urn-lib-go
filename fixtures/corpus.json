@@ -1408,6 +1408,95 @@
         "acme.com::mmdata"
       ],
       "throwsQualified": true
+    },
+    {
+      "fn": "composeInstalledAgentUrn",
+      "in": [
+        "hrn:app:micromentor.org::coding-app",
+        "hrn:agent:hadronmemory.com::coding-agent"
+      ],
+      "out": "hrn:agent:micromentor.org::coding-app::hadronmemory.com:coding-agent"
+    },
+    {
+      "fn": "composeInstalledAgentUrn",
+      "in": [
+        "urn:app:micromentor.org::coding-app",
+        "urn:agent:hadronmemory.com::coding-agent"
+      ],
+      "out": "hrn:agent:micromentor.org::coding-app::hadronmemory.com:coding-agent"
+    },
+    {
+      "fn": "composeInstalledAgentUrn",
+      "in": [
+        "micromentor.org::coding-app",
+        "hadronmemory.com::coding-agent"
+      ],
+      "out": "hrn:agent:micromentor.org::coding-app::hadronmemory.com:coding-agent"
+    },
+    {
+      "fn": "composeInstalledAgentUrn",
+      "in": [
+        "hrn:app:acme.com::app1",
+        "hrn:agent:acme.com::coding"
+      ],
+      "out": "hrn:agent:acme.com::app1::coding"
+    },
+    {
+      "fn": "composeInstalledAgentUrn",
+      "in": [
+        "hrn:app:acme.com::a::b",
+        "hrn:agent:x::y"
+      ],
+      "throwsAny": true
+    },
+    {
+      "fn": "parseForRow",
+      "in": [
+        "hrn:agent:acme.com::coding",
+        "1"
+      ],
+      "out": {
+        "canonical": "hrn:agent:acme.com::coding",
+        "isLegacy": false
+      }
+    },
+    {
+      "fn": "parseForRow",
+      "in": [
+        "urn:agent:acme.com::coding",
+        "1"
+      ],
+      "out": {
+        "canonical": "urn:agent:acme.com::coding",
+        "isLegacy": false
+      }
+    },
+    {
+      "fn": "parseForRow",
+      "in": [
+        "urn:memory:acme.com:dev",
+        ""
+      ],
+      "out": {
+        "canonical": "urn:memory:acme.com:dev",
+        "isLegacy": true
+      }
+    },
+    {
+      "fn": "parseForRow",
+      "in": [
+        "not-a-urn",
+        ""
+      ],
+      "throws": "malformed-grammar"
+    },
+    {
+      "fn": "parseForRow",
+      "in": [
+        "hrn:agent:acme.com::app:coding-app::agent:foo.com:bar",
+        "1"
+      ],
+      "throws": "malformed-grammar"
     }
   ]
 }

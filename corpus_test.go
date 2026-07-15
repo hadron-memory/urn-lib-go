@@ -7,6 +7,7 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"time"
 )
 
 // Conformance test: runs the shared fixture corpus (fixtures/corpus.json — the
@@ -20,6 +21,7 @@ type corpusCase struct {
 	Throws           string          `json:"throws"`
 	OffendingSegment string          `json:"offendingSegment"`
 	ThrowsQualified  bool            `json:"throwsQualified"`
+	ThrowsAny        bool            `json:"throwsAny"`
 }
 
 // call dispatches a corpus fn. All corpus args are strings. Value-returning fns
@@ -64,6 +66,15 @@ func call(fn string, args []string) (any, error) {
 		return nil, AssertFullyQualifiedUrn(args[0], args[1])
 	case "splitNodeUrn":
 		return SplitNodeUrn(args[0])
+	case "composeInstalledAgentUrn":
+		return ComposeInstalledAgentUrn(args[0], args[1])
+	case "parseForRow":
+		var norm *time.Time
+		if args[1] == "1" {
+			tt := time.Unix(0, 0)
+			norm = &tt
+		}
+		return ParseFor(UrnRow{URN: args[0], URNNormalizedAt: norm})
 	default:
 		return nil, fmt.Errorf("unknown fn %q in corpus", fn)
 	}
@@ -92,6 +103,13 @@ func TestCorpus(t *testing.T) {
 				var qe *NotQualifiedError
 				if !errors.As(err, &qe) {
 					t.Fatalf("expected NotQualifiedError, got err=%v", err)
+				}
+				return
+			}
+
+			if c.ThrowsAny {
+				if err == nil {
+					t.Fatalf("expected an error, got none")
 				}
 				return
 			}
