@@ -1288,6 +1288,126 @@
         ],
         "needsResolverCanonicalization": false
       }
+    },
+    {
+      "fn": "assertFullyQualifiedUrn",
+      "in": [
+        "acme.com::mmdata",
+        "memory"
+      ]
+    },
+    {
+      "fn": "assertFullyQualifiedUrn",
+      "in": [
+        "acme.com",
+        "org"
+      ]
+    },
+    {
+      "fn": "assertFullyQualifiedUrn",
+      "in": [
+        "acme.com::mmdata::review:sort",
+        "node"
+      ]
+    },
+    {
+      "fn": "assertFullyQualifiedUrn",
+      "in": [
+        "hrn:memory:acme.com::mmdata",
+        "memory"
+      ]
+    },
+    {
+      "fn": "assertFullyQualifiedUrn",
+      "in": [
+        "hrn:prompt:acme.com::mmdata::leaf",
+        "node"
+      ]
+    },
+    {
+      "fn": "assertFullyQualifiedUrn",
+      "in": [
+        "acme.com",
+        "memory"
+      ],
+      "throwsQualified": true
+    },
+    {
+      "fn": "assertFullyQualifiedUrn",
+      "in": [
+        "acme.com::mmdata",
+        "node"
+      ],
+      "throwsQualified": true
+    },
+    {
+      "fn": "assertFullyQualifiedUrn",
+      "in": [
+        "hrn:org:acme.com",
+        "memory"
+      ],
+      "throwsQualified": true
+    },
+    {
+      "fn": "assertFullyQualifiedUrn",
+      "in": [
+        "hrn:loc:foo",
+        "node"
+      ],
+      "throwsQualified": true
+    },
+    {
+      "fn": "assertFullyQualifiedUrn",
+      "in": [
+        "acme.com:::mmdata",
+        "memory"
+      ],
+      "throwsQualified": true
+    },
+    {
+      "fn": "assertFullyQualifiedUrn",
+      "in": [
+        "urn:",
+        "memory"
+      ],
+      "throwsQualified": true
+    },
+    {
+      "fn": "splitNodeUrn",
+      "in": [
+        "acme.com::mmdata::review:sort"
+      ],
+      "out": {
+        "memoryUrn": "acme.com:mmdata",
+        "loc": "review:sort"
+      }
+    },
+    {
+      "fn": "splitNodeUrn",
+      "in": [
+        "hrn:node:acme.com::mmdata::review:sort"
+      ],
+      "out": {
+        "memoryUrn": "acme.com:mmdata",
+        "loc": "review:sort"
+      }
+    },
+    {
+      "fn": "splitNodeUrn",
+      "in": [
+        "acme.com:mmdata:review:sort"
+      ],
+      "out": {
+        "memoryUrn": "acme.com:mmdata",
+        "loc": "review:sort"
+      }
+    },
+    {
+      "fn": "splitNodeUrn",
+      "in": [
+        "acme.com::mmdata"
+      ],
+      "throwsQualified": true
     }
   ]
 }

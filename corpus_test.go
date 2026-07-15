@@ -19,6 +19,7 @@ type corpusCase struct {
 	Out              json.RawMessage `json:"out"`
 	Throws           string          `json:"throws"`
 	OffendingSegment string          `json:"offendingSegment"`
+	ThrowsQualified  bool            `json:"throwsQualified"`
 }
 
 // call dispatches a corpus fn. All corpus args are strings. Value-returning fns
@@ -59,6 +60,10 @@ func call(fn string, args []string) (any, error) {
 		return ComposeNodeUrn(args[0], args[1])
 	case "composeEdgeUrn":
 		return ComposeEdgeUrn(args[0], args[1])
+	case "assertFullyQualifiedUrn":
+		return nil, AssertFullyQualifiedUrn(args[0], args[1])
+	case "splitNodeUrn":
+		return SplitNodeUrn(args[0])
 	default:
 		return nil, fmt.Errorf("unknown fn %q in corpus", fn)
 	}
@@ -82,6 +87,14 @@ func TestCorpus(t *testing.T) {
 	for i, c := range corpus.Cases {
 		t.Run(fmt.Sprintf("#%d_%s", i, c.Fn), func(t *testing.T) {
 			got, err := call(c.Fn, c.In)
+
+			if c.ThrowsQualified {
+				var qe *NotQualifiedError
+				if !errors.As(err, &qe) {
+					t.Fatalf("expected NotQualifiedError, got err=%v", err)
+				}
+				return
+			}
 
 			if c.Throws != "" {
 				var pe *ParseError
