@@ -1,0 +1,56 @@
+{
+  "_meta": {
+    "corpusVersion": 1,
+    "grammar": "v1-parity",
+    "note": "Language-agnostic conformance corpus. Every urn-lib implementation (js, go, ...) MUST run these. Each case: {fn, in:[args], out?:value, throws?:reasonCode}. `out` present = expected return; `throws` present = expected UrnParseError.reason; neither = void call that must not throw. This is the CONTRACT; ported from hadron-server src/lib/urn.ts. Grammar-v2 cases (flat forms, apprun, #data) are added in a later increment behind this same corpus.",
+    "source": "hadron-server/src/lib/urn.ts"
+  },
+  "cases": [
+    { "fn": "hasSchemePrefix", "in": ["hrn:node:acme.com:mem:loc"], "out": true },
+    { "fn": "hasSchemePrefix", "in": ["urn:node:acme.com:mem:loc"], "out": true },
+    { "fn": "hasSchemePrefix", "in": ["acme.com::specs::cor:urn"], "out": false },
+    { "fn": "hasSchemePrefix", "in": ["acme.com"], "out": false },
+
+    { "fn": "normalizeScheme", "in": ["urn:memory:acme.com::specs"], "out": "hrn:memory:acme.com::specs" },
+    { "fn": "normalizeScheme", "in": ["hrn:memory:acme.com::specs"], "out": "hrn:memory:acme.com::specs" },
+    { "fn": "normalizeScheme", "in": ["acme.com::specs"], "out": "acme.com::specs" },
+
+    { "fn": "normalizeUrnForLookup", "in": ["a::b::c"], "out": "a:b:c" },
+    { "fn": "normalizeUrnForLookup", "in": ["hadronmemory.com::specs::cor:urn"], "out": "hadronmemory.com:specs:cor:urn" },
+    { "fn": "normalizeUrnForLookup", "in": ["acme.com:mem:loc"], "out": "acme.com:mem:loc" },
+    { "fn": "normalizeUrnForLookup", "in": ["acme.com"], "out": "acme.com" },
+
+    { "fn": "legacyMemoryUrnToCanonical", "in": ["org:specs"], "out": "org::specs" },
+    { "fn": "legacyMemoryUrnToCanonical", "in": ["acme.com:secureid"], "out": "acme.com::secureid" },
+    { "fn": "legacyMemoryUrnToCanonical", "in": ["org:agent:app-user:id"], "out": "org::agent::app-user:id" },
+    { "fn": "legacyMemoryUrnToCanonical", "in": ["org:agent:anon:id"], "out": "org::agent::anon:id" },
+    { "fn": "legacyMemoryUrnToCanonical", "in": ["org:agent:system"], "out": "org::agent::system" },
+
+    { "fn": "agentSlugFromUrn", "in": ["acme.com:code-generator"], "out": "code-generator" },
+    { "fn": "agentSlugFromUrn", "in": ["acme.com::code-generator"], "out": "code-generator" },
+    { "fn": "agentSlugFromUrn", "in": ["acme.com::app:dev-helper::agent:code-generator"], "out": "app:dev-helper:agent:code-generator" },
+
+    { "fn": "validateUserSlug", "in": ["holger"] },
+    { "fn": "validateUserSlug", "in": ["a"] },
+    { "fn": "validateUserSlug", "in": ["good.name_ok-1"] },
+    { "fn": "validateUserSlug", "in": ["Holger"], "throws": "slug-not-lowercase" },
+    { "fn": "validateUserSlug", "in": ["system"], "throws": "reserved-word-slug" },
+    { "fn": "validateUserSlug", "in": ["System"], "throws": "reserved-word-slug" },
+    { "fn": "validateUserSlug", "in": ["-bad"], "throws": "invalid-charset" },
+    { "fn": "validateUserSlug", "in": [""], "throws": "invalid-segment-shape" },
+    { "fn": "validateUserSlug", "in": ["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"], "throws": "slug-too-long" },
+
+    { "fn": "validateOrgSlug", "in": ["acme.com"] },
+    { "fn": "validateOrgSlug", "in": ["baragaun.com"] },
+    { "fn": "validateOrgSlug", "in": ["hrn:org:acme.com"], "throws": "org-urn-not-bare" },
+    { "fn": "validateOrgSlug", "in": ["acme.com:extra"], "throws": "org-urn-not-bare" },
+    { "fn": "validateOrgSlug", "in": ["Acme.com"], "throws": "slug-not-lowercase" },
+    { "fn": "validateOrgSlug", "in": ["org"], "throws": "reserved-word-slug" },
+
+    { "fn": "deriveSlugFromName", "in": ["My Cool Org!"], "out": "my-cool-org" },
+    { "fn": "deriveSlugFromName", "in": ["  Hello, World  "], "out": "hello-world" },
+    { "fn": "deriveSlugFromName", "in": ["acme.com"], "out": "acme.com" },
+    { "fn": "deriveSlugFromName", "in": ["café"], "out": "caf" },
+    { "fn": "deriveSlugFromName", "in": ["!!!"], "throws": "empty-derived-slug" }
+  ]
+}
