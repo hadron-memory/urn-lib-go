@@ -18,11 +18,13 @@ hadron-server / portal / docs / cli (hadron-server#239, #693).
 - **normalize** — `NormalizeUrnForLookup`, `LegacyMemoryUrnToCanonical`, `AgentSlugFromUrn`
 - **slug** — `ValidateAtomShape`, `ValidateUserSlug`, `ValidateOrgSlug`, `DeriveSlugFromName`
 - **legacy** — `ParseUrnInput`, `FormatUrn`, `ValidateUrnType` (the pre-021 surface)
+- **parser** — `ParseUrn` (the canonical-form parser, D11 cats 1 + 4), `IsParserCanonical`, `ToParserCanonical`
+- **compose** — `FormatCanonicalUrn`, `ComposeNodeUrn`, `ComposeEdgeUrn`
 - **errors** — `ParseError` + the machine-stable `Reason` codes
 
-Not yet ported (later increments, gated by the same corpus): the **canonical
-parser** `ParseUrn` and the qualification/format/compose surfaces that sit on it,
-then the **grammar-v2 flat forms** (hadron-server#694).
+Not yet ported (later increments, gated by the same corpus): the **qualification**
+family (`AssertFullyQualifiedUrn`, `SplitNodeUrn`) and the install/migration
+helpers, then the **grammar-v2 flat forms** (hadron-server#694).
 
 ## Usage
 

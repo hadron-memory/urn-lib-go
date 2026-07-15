@@ -59,3 +59,36 @@ var reservedSlugSet = func() map[string]bool {
 	}
 	return m
 }()
+
+// urnTypeSet is the membership set for the full type registry.
+var urnTypeSet = func() map[string]bool {
+	m := map[string]bool{}
+	for _, t := range urnTypes() {
+		m[t] = true
+	}
+	return m
+}()
+
+// nodeURNTypeSet — URN types that identify a node.
+var nodeURNTypeSet = func() map[string]bool {
+	m := map[string]bool{"node": true}
+	for _, t := range NodeTypes {
+		m[t] = true
+	}
+	for _, t := range NodeRoles {
+		m[t] = true
+	}
+	for _, t := range NodeParts {
+		m[t] = true
+	}
+	return m
+}()
+
+// ownerNamespacedSet — types whose owner/author namespace may be an @<handle>.
+var ownerNamespacedSet = func() map[string]bool {
+	m := map[string]bool{"app": true, "agent": true, "memory": true, "edge": true}
+	for k := range nodeURNTypeSet {
+		m[k] = true
+	}
+	return m
+}()

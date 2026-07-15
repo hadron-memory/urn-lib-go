@@ -46,6 +46,18 @@ func call(fn string, args []string) (any, error) {
 		return ParseUrnInput(args[0]), nil
 	case "validateUrnTypeFromInput":
 		return ValidateUrnType(ParseUrnInput(args[0]), args[1]), nil
+	case "parseUrn":
+		return ParseUrn(args[0])
+	case "isParserCanonical":
+		return IsParserCanonical(args[0]), nil
+	case "toParserCanonical":
+		return ToParserCanonical(args[0])
+	case "formatCanonicalUrn":
+		return FormatCanonicalUrn(args[0], args[1])
+	case "composeNodeUrn":
+		return ComposeNodeUrn(args[0], args[1])
+	case "composeEdgeUrn":
+		return ComposeEdgeUrn(args[0], args[1])
 	default:
 		return nil, fmt.Errorf("unknown fn %q in corpus", fn)
 	}

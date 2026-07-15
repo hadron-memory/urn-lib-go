@@ -66,6 +66,36 @@
     { "fn": "validateUrnTypeFromInput", "in": ["acme.com::specs", "memory"], "out": null },
     { "fn": "validateUrnTypeFromInput", "in": ["loc:foo", "node"], "out": null },
     { "fn": "validateUrnTypeFromInput", "in": ["hrn:org:acme.com", "memory"], "out": "Expected memory URN (hrn:memory:...), got hrn:org:..." },
-    { "fn": "validateUrnTypeFromInput", "in": ["loc:foo", "memory"], "out": "Expected memory URN (hrn:memory:...), got hrn:loc:..." }
+    { "fn": "validateUrnTypeFromInput", "in": ["loc:foo", "memory"], "out": "Expected memory URN (hrn:memory:...), got hrn:loc:..." },
+
+    { "fn": "parseUrn", "in": ["hrn:memory:acme.com::specs"], "out": { "type": "memory", "pathSegments": ["acme.com", "specs"], "parserCanonical": "hrn:memory:acme.com::specs", "inputForm": "hrn:memory:acme.com::specs", "parserRewrites": [], "needsResolverCanonicalization": false } },
+    { "fn": "parseUrn", "in": ["urn:memory:acme.com::specs"], "out": { "type": "memory", "pathSegments": ["acme.com", "specs"], "parserCanonical": "hrn:memory:acme.com::specs", "inputForm": "urn:memory:acme.com::specs", "parserRewrites": ["legacy-urn-scheme"], "needsResolverCanonicalization": false } },
+    { "fn": "parseUrn", "in": ["hrn:node:acme.com::specs::review:sort"], "out": { "type": "node", "pathSegments": ["acme.com", "specs", "review:sort"], "parserCanonical": "hrn:node:acme.com::specs::review:sort", "inputForm": "hrn:node:acme.com::specs::review:sort", "parserRewrites": [], "needsResolverCanonicalization": true } },
+    { "fn": "parseUrn", "in": ["hrn:memory:acme.com::agent:juno::system"], "out": { "type": "memory", "pathSegments": ["acme.com", "juno", "system"], "parserCanonical": "hrn:memory:acme.com::juno::system", "inputForm": "hrn:memory:acme.com::agent:juno::system", "parserRewrites": ["type-marker-optionality"], "needsResolverCanonicalization": false } },
+    { "fn": "parseUrn", "in": ["hrn:agent:acme.com::acme.com:coding"], "out": { "type": "agent", "pathSegments": ["acme.com", "coding"], "parserCanonical": "hrn:agent:acme.com::coding", "inputForm": "hrn:agent:acme.com::acme.com:coding", "parserRewrites": ["source-install-memory"], "needsResolverCanonicalization": false } },
+    { "fn": "parseUrn", "in": ["loc:foo"], "throws": "loc-segment-rejected" },
+    { "fn": "parseUrn", "in": ["hrn:loc:foo"], "throws": "loc-segment-rejected" },
+    { "fn": "parseUrn", "in": ["notaurn"], "throws": "malformed-grammar" },
+    { "fn": "parseUrn", "in": ["hrn:bogus:foo"], "throws": "unknown-type" },
+    { "fn": "parseUrn", "in": ["hrn:memory:acme.com::"], "throws": "trailing-double-colon" },
+    { "fn": "parseUrn", "in": ["hrn:memory:acme.com::::specs"], "throws": "empty-segment" },
+    { "fn": "parseUrn", "in": ["hrn:memory:acme.com:specs"], "throws": "invalid-segment-shape" },
+    { "fn": "parseUrn", "in": ["hrn:memory:system::specs"], "throws": "reserved-word-slug" },
+
+    { "fn": "isParserCanonical", "in": ["hrn:memory:acme.com::specs"], "out": true },
+    { "fn": "isParserCanonical", "in": ["urn:memory:acme.com::specs"], "out": false },
+    { "fn": "isParserCanonical", "in": ["hrn:memory:acme.com::agent:juno::system"], "out": false },
+    { "fn": "isParserCanonical", "in": ["garbage"], "out": false },
+
+    { "fn": "toParserCanonical", "in": ["hrn:memory:acme.com::specs"], "out": "hrn:memory:acme.com::specs" },
+    { "fn": "toParserCanonical", "in": ["urn:agent:acme.com::acme.com:coding"], "out": "hrn:agent:acme.com::coding" },
+
+    { "fn": "formatCanonicalUrn", "in": ["memory", "acme.com:dev"], "out": "hrn:memory:acme.com::dev" },
+    { "fn": "formatCanonicalUrn", "in": ["memory", "acme.com::dev"], "out": "hrn:memory:acme.com::dev" },
+    { "fn": "formatCanonicalUrn", "in": ["memory", ""], "throws": "empty-bare-value" },
+    { "fn": "formatCanonicalUrn", "in": ["memory", "hrn:memory:x"], "throws": "already-prefixed-bare-value" },
+
+    { "fn": "composeNodeUrn", "in": ["acme.com:dev", "review:sort"], "out": "hrn:node:acme.com::dev::review:sort" },
+    { "fn": "composeEdgeUrn", "in": ["acme.com:dev", "intro:next"], "out": "hrn:edge:acme.com::dev::intro:next" }
   ]
 }
