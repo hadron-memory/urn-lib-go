@@ -1,101 +1,1293 @@
 {
   "_meta": {
-    "corpusVersion": 1,
+    "corpusVersion": 2,
     "grammar": "v1-parity",
-    "note": "Language-agnostic conformance corpus. Every urn-lib implementation (js, go, ...) MUST run these. Each case: {fn, in:[args], out?:value, throws?:reasonCode}. `out` present = expected return; `throws` present = expected UrnParseError.reason; neither = void call that must not throw. This is the CONTRACT; ported from hadron-server src/lib/urn.ts. Grammar-v2 cases (flat forms, apprun, #data) are added in a later increment behind this same corpus.",
+    "note": "Language-agnostic conformance corpus. Every urn-lib implementation (js, go, ...) MUST run these. Each case: {fn, in:[args], out?:value, throws?:reasonCode}. `out` present = expected return; `throws` present = expected UrnParseError.reason; neither = void call that must not throw. This is the CONTRACT; ported from hadron-server src/lib/urn.ts. Grammar-v2 cases (flat forms, apprun, #data) are added in a later increment behind this same corpus. v2 adds the hadron-server parser golden-set (parser-golden-set.json) — the authoritative parseUrn suite incl. spec-047 @handle, D11 cats, role markers, R2 installs.",
     "source": "hadron-server/src/lib/urn.ts"
   },
   "cases": [
-    { "fn": "hasSchemePrefix", "in": ["hrn:node:acme.com:mem:loc"], "out": true },
-    { "fn": "hasSchemePrefix", "in": ["urn:node:acme.com:mem:loc"], "out": true },
-    { "fn": "hasSchemePrefix", "in": ["acme.com::specs::cor:urn"], "out": false },
-    { "fn": "hasSchemePrefix", "in": ["acme.com"], "out": false },
-
-    { "fn": "normalizeScheme", "in": ["urn:memory:acme.com::specs"], "out": "hrn:memory:acme.com::specs" },
-    { "fn": "normalizeScheme", "in": ["hrn:memory:acme.com::specs"], "out": "hrn:memory:acme.com::specs" },
-    { "fn": "normalizeScheme", "in": ["acme.com::specs"], "out": "acme.com::specs" },
-
-    { "fn": "normalizeUrnForLookup", "in": ["a::b::c"], "out": "a:b:c" },
-    { "fn": "normalizeUrnForLookup", "in": ["hadronmemory.com::specs::cor:urn"], "out": "hadronmemory.com:specs:cor:urn" },
-    { "fn": "normalizeUrnForLookup", "in": ["acme.com:mem:loc"], "out": "acme.com:mem:loc" },
-    { "fn": "normalizeUrnForLookup", "in": ["acme.com"], "out": "acme.com" },
-
-    { "fn": "legacyMemoryUrnToCanonical", "in": ["org:specs"], "out": "org::specs" },
-    { "fn": "legacyMemoryUrnToCanonical", "in": ["acme.com:secureid"], "out": "acme.com::secureid" },
-    { "fn": "legacyMemoryUrnToCanonical", "in": ["org:agent:app-user:id"], "out": "org::agent::app-user:id" },
-    { "fn": "legacyMemoryUrnToCanonical", "in": ["org:agent:anon:id"], "out": "org::agent::anon:id" },
-    { "fn": "legacyMemoryUrnToCanonical", "in": ["org:agent:system"], "out": "org::agent::system" },
-
-    { "fn": "agentSlugFromUrn", "in": ["acme.com:code-generator"], "out": "code-generator" },
-    { "fn": "agentSlugFromUrn", "in": ["acme.com::code-generator"], "out": "code-generator" },
-    { "fn": "agentSlugFromUrn", "in": ["acme.com::app:dev-helper::agent:code-generator"], "out": "app:dev-helper:agent:code-generator" },
-
-    { "fn": "validateUserSlug", "in": ["holger"] },
-    { "fn": "validateUserSlug", "in": ["a"] },
-    { "fn": "validateUserSlug", "in": ["good.name_ok-1"] },
-    { "fn": "validateUserSlug", "in": ["Holger"], "throws": "slug-not-lowercase" },
-    { "fn": "validateUserSlug", "in": ["system"], "throws": "reserved-word-slug" },
-    { "fn": "validateUserSlug", "in": ["System"], "throws": "reserved-word-slug" },
-    { "fn": "validateUserSlug", "in": ["-bad"], "throws": "invalid-charset" },
-    { "fn": "validateUserSlug", "in": [""], "throws": "invalid-segment-shape" },
-    { "fn": "validateUserSlug", "in": ["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"], "throws": "slug-too-long" },
-
-    { "fn": "validateOrgSlug", "in": ["acme.com"] },
-    { "fn": "validateOrgSlug", "in": ["baragaun.com"] },
-    { "fn": "validateOrgSlug", "in": ["hrn:org:acme.com"], "throws": "org-urn-not-bare" },
-    { "fn": "validateOrgSlug", "in": ["acme.com:extra"], "throws": "org-urn-not-bare" },
-    { "fn": "validateOrgSlug", "in": ["Acme.com"], "throws": "slug-not-lowercase" },
-    { "fn": "validateOrgSlug", "in": ["org"], "throws": "reserved-word-slug" },
-
-    { "fn": "deriveSlugFromName", "in": ["My Cool Org!"], "out": "my-cool-org" },
-    { "fn": "deriveSlugFromName", "in": ["  Hello, World  "], "out": "hello-world" },
-    { "fn": "deriveSlugFromName", "in": ["acme.com"], "out": "acme.com" },
-    { "fn": "deriveSlugFromName", "in": ["café"], "out": "caf" },
-    { "fn": "deriveSlugFromName", "in": ["!!!"], "throws": "empty-derived-slug" },
-
-    { "fn": "formatUrn", "in": ["node", "acme.com::mem::loc"], "out": "hrn:node:acme.com::mem::loc" },
-    { "fn": "formatUrn", "in": ["user", "holger"], "out": "hrn:user:holger" },
-
-    { "fn": "parseUrnInput", "in": ["hrn:memory:acme.com::specs"], "out": { "type": "memory", "value": "acme.com::specs" } },
-    { "fn": "parseUrnInput", "in": ["urn:node:acme.com:mem:loc"], "out": { "type": "node", "value": "acme.com:mem:loc" } },
-    { "fn": "parseUrnInput", "in": ["loc:review:sort"], "out": { "type": "loc", "value": "review:sort" } },
-    { "fn": "parseUrnInput", "in": ["acme.com::specs"], "out": { "type": "unknown", "value": "acme.com::specs" } },
-    { "fn": "parseUrnInput", "in": ["hrn:secret:acme.com:key"], "out": { "type": "unknown", "value": "hrn:secret:acme.com:key" } },
-
-    { "fn": "validateUrnTypeFromInput", "in": ["hrn:memory:acme.com::specs", "memory"], "out": null },
-    { "fn": "validateUrnTypeFromInput", "in": ["acme.com::specs", "memory"], "out": null },
-    { "fn": "validateUrnTypeFromInput", "in": ["loc:foo", "node"], "out": null },
-    { "fn": "validateUrnTypeFromInput", "in": ["hrn:org:acme.com", "memory"], "out": "Expected memory URN (hrn:memory:...), got hrn:org:..." },
-    { "fn": "validateUrnTypeFromInput", "in": ["loc:foo", "memory"], "out": "Expected memory URN (hrn:memory:...), got hrn:loc:..." },
-
-    { "fn": "parseUrn", "in": ["hrn:memory:acme.com::specs"], "out": { "type": "memory", "pathSegments": ["acme.com", "specs"], "parserCanonical": "hrn:memory:acme.com::specs", "inputForm": "hrn:memory:acme.com::specs", "parserRewrites": [], "needsResolverCanonicalization": false } },
-    { "fn": "parseUrn", "in": ["urn:memory:acme.com::specs"], "out": { "type": "memory", "pathSegments": ["acme.com", "specs"], "parserCanonical": "hrn:memory:acme.com::specs", "inputForm": "urn:memory:acme.com::specs", "parserRewrites": ["legacy-urn-scheme"], "needsResolverCanonicalization": false } },
-    { "fn": "parseUrn", "in": ["hrn:node:acme.com::specs::review:sort"], "out": { "type": "node", "pathSegments": ["acme.com", "specs", "review:sort"], "parserCanonical": "hrn:node:acme.com::specs::review:sort", "inputForm": "hrn:node:acme.com::specs::review:sort", "parserRewrites": [], "needsResolverCanonicalization": true } },
-    { "fn": "parseUrn", "in": ["hrn:memory:acme.com::agent:juno::system"], "out": { "type": "memory", "pathSegments": ["acme.com", "juno", "system"], "parserCanonical": "hrn:memory:acme.com::juno::system", "inputForm": "hrn:memory:acme.com::agent:juno::system", "parserRewrites": ["type-marker-optionality"], "needsResolverCanonicalization": false } },
-    { "fn": "parseUrn", "in": ["hrn:agent:acme.com::acme.com:coding"], "out": { "type": "agent", "pathSegments": ["acme.com", "coding"], "parserCanonical": "hrn:agent:acme.com::coding", "inputForm": "hrn:agent:acme.com::acme.com:coding", "parserRewrites": ["source-install-memory"], "needsResolverCanonicalization": false } },
-    { "fn": "parseUrn", "in": ["loc:foo"], "throws": "loc-segment-rejected" },
-    { "fn": "parseUrn", "in": ["hrn:loc:foo"], "throws": "loc-segment-rejected" },
-    { "fn": "parseUrn", "in": ["notaurn"], "throws": "malformed-grammar" },
-    { "fn": "parseUrn", "in": ["hrn:bogus:foo"], "throws": "unknown-type" },
-    { "fn": "parseUrn", "in": ["hrn:memory:acme.com::"], "throws": "trailing-double-colon" },
-    { "fn": "parseUrn", "in": ["hrn:memory:acme.com::::specs"], "throws": "empty-segment" },
-    { "fn": "parseUrn", "in": ["hrn:memory:acme.com:specs"], "throws": "invalid-segment-shape" },
-    { "fn": "parseUrn", "in": ["hrn:memory:system::specs"], "throws": "reserved-word-slug" },
-
-    { "fn": "isParserCanonical", "in": ["hrn:memory:acme.com::specs"], "out": true },
-    { "fn": "isParserCanonical", "in": ["urn:memory:acme.com::specs"], "out": false },
-    { "fn": "isParserCanonical", "in": ["hrn:memory:acme.com::agent:juno::system"], "out": false },
-    { "fn": "isParserCanonical", "in": ["garbage"], "out": false },
-
-    { "fn": "toParserCanonical", "in": ["hrn:memory:acme.com::specs"], "out": "hrn:memory:acme.com::specs" },
-    { "fn": "toParserCanonical", "in": ["urn:agent:acme.com::acme.com:coding"], "out": "hrn:agent:acme.com::coding" },
-
-    { "fn": "formatCanonicalUrn", "in": ["memory", "acme.com:dev"], "out": "hrn:memory:acme.com::dev" },
-    { "fn": "formatCanonicalUrn", "in": ["memory", "acme.com::dev"], "out": "hrn:memory:acme.com::dev" },
-    { "fn": "formatCanonicalUrn", "in": ["memory", ""], "throws": "empty-bare-value" },
-    { "fn": "formatCanonicalUrn", "in": ["memory", "hrn:memory:x"], "throws": "already-prefixed-bare-value" },
-
-    { "fn": "composeNodeUrn", "in": ["acme.com:dev", "review:sort"], "out": "hrn:node:acme.com::dev::review:sort" },
-    { "fn": "composeEdgeUrn", "in": ["acme.com:dev", "intro:next"], "out": "hrn:edge:acme.com::dev::intro:next" }
+    {
+      "fn": "hasSchemePrefix",
+      "in": [
+        "hrn:node:acme.com:mem:loc"
+      ],
+      "out": true
+    },
+    {
+      "fn": "hasSchemePrefix",
+      "in": [
+        "urn:node:acme.com:mem:loc"
+      ],
+      "out": true
+    },
+    {
+      "fn": "hasSchemePrefix",
+      "in": [
+        "acme.com::specs::cor:urn"
+      ],
+      "out": false
+    },
+    {
+      "fn": "hasSchemePrefix",
+      "in": [
+        "acme.com"
+      ],
+      "out": false
+    },
+    {
+      "fn": "normalizeScheme",
+      "in": [
+        "urn:memory:acme.com::specs"
+      ],
+      "out": "hrn:memory:acme.com::specs"
+    },
+    {
+      "fn": "normalizeScheme",
+      "in": [
+        "hrn:memory:acme.com::specs"
+      ],
+      "out": "hrn:memory:acme.com::specs"
+    },
+    {
+      "fn": "normalizeScheme",
+      "in": [
+        "acme.com::specs"
+      ],
+      "out": "acme.com::specs"
+    },
+    {
+      "fn": "normalizeUrnForLookup",
+      "in": [
+        "a::b::c"
+      ],
+      "out": "a:b:c"
+    },
+    {
+      "fn": "normalizeUrnForLookup",
+      "in": [
+        "hadronmemory.com::specs::cor:urn"
+      ],
+      "out": "hadronmemory.com:specs:cor:urn"
+    },
+    {
+      "fn": "normalizeUrnForLookup",
+      "in": [
+        "acme.com:mem:loc"
+      ],
+      "out": "acme.com:mem:loc"
+    },
+    {
+      "fn": "normalizeUrnForLookup",
+      "in": [
+        "acme.com"
+      ],
+      "out": "acme.com"
+    },
+    {
+      "fn": "legacyMemoryUrnToCanonical",
+      "in": [
+        "org:specs"
+      ],
+      "out": "org::specs"
+    },
+    {
+      "fn": "legacyMemoryUrnToCanonical",
+      "in": [
+        "acme.com:secureid"
+      ],
+      "out": "acme.com::secureid"
+    },
+    {
+      "fn": "legacyMemoryUrnToCanonical",
+      "in": [
+        "org:agent:app-user:id"
+      ],
+      "out": "org::agent::app-user:id"
+    },
+    {
+      "fn": "legacyMemoryUrnToCanonical",
+      "in": [
+        "org:agent:anon:id"
+      ],
+      "out": "org::agent::anon:id"
+    },
+    {
+      "fn": "legacyMemoryUrnToCanonical",
+      "in": [
+        "org:agent:system"
+      ],
+      "out": "org::agent::system"
+    },
+    {
+      "fn": "agentSlugFromUrn",
+      "in": [
+        "acme.com:code-generator"
+      ],
+      "out": "code-generator"
+    },
+    {
+      "fn": "agentSlugFromUrn",
+      "in": [
+        "acme.com::code-generator"
+      ],
+      "out": "code-generator"
+    },
+    {
+      "fn": "agentSlugFromUrn",
+      "in": [
+        "acme.com::app:dev-helper::agent:code-generator"
+      ],
+      "out": "app:dev-helper:agent:code-generator"
+    },
+    {
+      "fn": "validateUserSlug",
+      "in": [
+        "holger"
+      ]
+    },
+    {
+      "fn": "validateUserSlug",
+      "in": [
+        "a"
+      ]
+    },
+    {
+      "fn": "validateUserSlug",
+      "in": [
+        "good.name_ok-1"
+      ]
+    },
+    {
+      "fn": "validateUserSlug",
+      "in": [
+        "Holger"
+      ],
+      "throws": "slug-not-lowercase"
+    },
+    {
+      "fn": "validateUserSlug",
+      "in": [
+        "system"
+      ],
+      "throws": "reserved-word-slug"
+    },
+    {
+      "fn": "validateUserSlug",
+      "in": [
+        "System"
+      ],
+      "throws": "reserved-word-slug"
+    },
+    {
+      "fn": "validateUserSlug",
+      "in": [
+        "-bad"
+      ],
+      "throws": "invalid-charset"
+    },
+    {
+      "fn": "validateUserSlug",
+      "in": [
+        ""
+      ],
+      "throws": "invalid-segment-shape"
+    },
+    {
+      "fn": "validateUserSlug",
+      "in": [
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      ],
+      "throws": "slug-too-long"
+    },
+    {
+      "fn": "validateOrgSlug",
+      "in": [
+        "acme.com"
+      ]
+    },
+    {
+      "fn": "validateOrgSlug",
+      "in": [
+        "baragaun.com"
+      ]
+    },
+    {
+      "fn": "validateOrgSlug",
+      "in": [
+        "hrn:org:acme.com"
+      ],
+      "throws": "org-urn-not-bare"
+    },
+    {
+      "fn": "validateOrgSlug",
+      "in": [
+        "acme.com:extra"
+      ],
+      "throws": "org-urn-not-bare"
+    },
+    {
+      "fn": "validateOrgSlug",
+      "in": [
+        "Acme.com"
+      ],
+      "throws": "slug-not-lowercase"
+    },
+    {
+      "fn": "validateOrgSlug",
+      "in": [
+        "org"
+      ],
+      "throws": "reserved-word-slug"
+    },
+    {
+      "fn": "deriveSlugFromName",
+      "in": [
+        "My Cool Org!"
+      ],
+      "out": "my-cool-org"
+    },
+    {
+      "fn": "deriveSlugFromName",
+      "in": [
+        "  Hello, World  "
+      ],
+      "out": "hello-world"
+    },
+    {
+      "fn": "deriveSlugFromName",
+      "in": [
+        "acme.com"
+      ],
+      "out": "acme.com"
+    },
+    {
+      "fn": "deriveSlugFromName",
+      "in": [
+        "café"
+      ],
+      "out": "caf"
+    },
+    {
+      "fn": "deriveSlugFromName",
+      "in": [
+        "!!!"
+      ],
+      "throws": "empty-derived-slug"
+    },
+    {
+      "fn": "formatUrn",
+      "in": [
+        "node",
+        "acme.com::mem::loc"
+      ],
+      "out": "hrn:node:acme.com::mem::loc"
+    },
+    {
+      "fn": "formatUrn",
+      "in": [
+        "user",
+        "holger"
+      ],
+      "out": "hrn:user:holger"
+    },
+    {
+      "fn": "parseUrnInput",
+      "in": [
+        "hrn:memory:acme.com::specs"
+      ],
+      "out": {
+        "type": "memory",
+        "value": "acme.com::specs"
+      }
+    },
+    {
+      "fn": "parseUrnInput",
+      "in": [
+        "urn:node:acme.com:mem:loc"
+      ],
+      "out": {
+        "type": "node",
+        "value": "acme.com:mem:loc"
+      }
+    },
+    {
+      "fn": "parseUrnInput",
+      "in": [
+        "loc:review:sort"
+      ],
+      "out": {
+        "type": "loc",
+        "value": "review:sort"
+      }
+    },
+    {
+      "fn": "parseUrnInput",
+      "in": [
+        "acme.com::specs"
+      ],
+      "out": {
+        "type": "unknown",
+        "value": "acme.com::specs"
+      }
+    },
+    {
+      "fn": "parseUrnInput",
+      "in": [
+        "hrn:secret:acme.com:key"
+      ],
+      "out": {
+        "type": "unknown",
+        "value": "hrn:secret:acme.com:key"
+      }
+    },
+    {
+      "fn": "validateUrnTypeFromInput",
+      "in": [
+        "hrn:memory:acme.com::specs",
+        "memory"
+      ],
+      "out": null
+    },
+    {
+      "fn": "validateUrnTypeFromInput",
+      "in": [
+        "acme.com::specs",
+        "memory"
+      ],
+      "out": null
+    },
+    {
+      "fn": "validateUrnTypeFromInput",
+      "in": [
+        "loc:foo",
+        "node"
+      ],
+      "out": null
+    },
+    {
+      "fn": "validateUrnTypeFromInput",
+      "in": [
+        "hrn:org:acme.com",
+        "memory"
+      ],
+      "out": "Expected memory URN (hrn:memory:...), got hrn:org:..."
+    },
+    {
+      "fn": "validateUrnTypeFromInput",
+      "in": [
+        "loc:foo",
+        "memory"
+      ],
+      "out": "Expected memory URN (hrn:memory:...), got hrn:loc:..."
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:memory:acme.com::specs"
+      ],
+      "out": {
+        "type": "memory",
+        "pathSegments": [
+          "acme.com",
+          "specs"
+        ],
+        "parserCanonical": "hrn:memory:acme.com::specs",
+        "inputForm": "hrn:memory:acme.com::specs",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "urn:memory:acme.com::specs"
+      ],
+      "out": {
+        "type": "memory",
+        "pathSegments": [
+          "acme.com",
+          "specs"
+        ],
+        "parserCanonical": "hrn:memory:acme.com::specs",
+        "inputForm": "urn:memory:acme.com::specs",
+        "parserRewrites": [
+          "legacy-urn-scheme"
+        ],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:node:acme.com::specs::review:sort"
+      ],
+      "out": {
+        "type": "node",
+        "pathSegments": [
+          "acme.com",
+          "specs",
+          "review:sort"
+        ],
+        "parserCanonical": "hrn:node:acme.com::specs::review:sort",
+        "inputForm": "hrn:node:acme.com::specs::review:sort",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": true
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:memory:acme.com::agent:juno::system"
+      ],
+      "out": {
+        "type": "memory",
+        "pathSegments": [
+          "acme.com",
+          "juno",
+          "system"
+        ],
+        "parserCanonical": "hrn:memory:acme.com::juno::system",
+        "inputForm": "hrn:memory:acme.com::agent:juno::system",
+        "parserRewrites": [
+          "type-marker-optionality"
+        ],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:agent:acme.com::acme.com:coding"
+      ],
+      "out": {
+        "type": "agent",
+        "pathSegments": [
+          "acme.com",
+          "coding"
+        ],
+        "parserCanonical": "hrn:agent:acme.com::coding",
+        "inputForm": "hrn:agent:acme.com::acme.com:coding",
+        "parserRewrites": [
+          "source-install-memory"
+        ],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "loc:foo"
+      ],
+      "throws": "loc-segment-rejected"
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:loc:foo"
+      ],
+      "throws": "loc-segment-rejected"
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "notaurn"
+      ],
+      "throws": "malformed-grammar"
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:bogus:foo"
+      ],
+      "throws": "unknown-type"
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:memory:acme.com::"
+      ],
+      "throws": "trailing-double-colon"
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:memory:acme.com::::specs"
+      ],
+      "throws": "empty-segment"
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:memory:acme.com:specs"
+      ],
+      "throws": "invalid-segment-shape"
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:memory:system::specs"
+      ],
+      "throws": "reserved-word-slug"
+    },
+    {
+      "fn": "isParserCanonical",
+      "in": [
+        "hrn:memory:acme.com::specs"
+      ],
+      "out": true
+    },
+    {
+      "fn": "isParserCanonical",
+      "in": [
+        "urn:memory:acme.com::specs"
+      ],
+      "out": false
+    },
+    {
+      "fn": "isParserCanonical",
+      "in": [
+        "hrn:memory:acme.com::agent:juno::system"
+      ],
+      "out": false
+    },
+    {
+      "fn": "isParserCanonical",
+      "in": [
+        "garbage"
+      ],
+      "out": false
+    },
+    {
+      "fn": "toParserCanonical",
+      "in": [
+        "hrn:memory:acme.com::specs"
+      ],
+      "out": "hrn:memory:acme.com::specs"
+    },
+    {
+      "fn": "toParserCanonical",
+      "in": [
+        "urn:agent:acme.com::acme.com:coding"
+      ],
+      "out": "hrn:agent:acme.com::coding"
+    },
+    {
+      "fn": "formatCanonicalUrn",
+      "in": [
+        "memory",
+        "acme.com:dev"
+      ],
+      "out": "hrn:memory:acme.com::dev"
+    },
+    {
+      "fn": "formatCanonicalUrn",
+      "in": [
+        "memory",
+        "acme.com::dev"
+      ],
+      "out": "hrn:memory:acme.com::dev"
+    },
+    {
+      "fn": "formatCanonicalUrn",
+      "in": [
+        "memory",
+        ""
+      ],
+      "throws": "empty-bare-value"
+    },
+    {
+      "fn": "formatCanonicalUrn",
+      "in": [
+        "memory",
+        "hrn:memory:x"
+      ],
+      "throws": "already-prefixed-bare-value"
+    },
+    {
+      "fn": "composeNodeUrn",
+      "in": [
+        "acme.com:dev",
+        "review:sort"
+      ],
+      "out": "hrn:node:acme.com::dev::review:sort"
+    },
+    {
+      "fn": "composeEdgeUrn",
+      "in": [
+        "acme.com:dev",
+        "intro:next"
+      ],
+      "out": "hrn:edge:acme.com::dev::intro:next"
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:agent:hadronmemory.com::coding-agent"
+      ],
+      "out": {
+        "type": "agent",
+        "pathSegments": [
+          "hadronmemory.com",
+          "coding-agent"
+        ],
+        "parserCanonical": "hrn:agent:hadronmemory.com::coding-agent",
+        "inputForm": "hrn:agent:hadronmemory.com::coding-agent",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:memory:hadronmemory.com::coding-agent::system"
+      ],
+      "out": {
+        "type": "memory",
+        "pathSegments": [
+          "hadronmemory.com",
+          "coding-agent",
+          "system"
+        ],
+        "parserCanonical": "hrn:memory:hadronmemory.com::coding-agent::system",
+        "inputForm": "hrn:memory:hadronmemory.com::coding-agent::system",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:app:micromentor.org::coding-app"
+      ],
+      "out": {
+        "type": "app",
+        "pathSegments": [
+          "micromentor.org",
+          "coding-app"
+        ],
+        "parserCanonical": "hrn:app:micromentor.org::coding-app",
+        "inputForm": "hrn:app:micromentor.org::coding-app",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:fake:foo"
+      ],
+      "throws": "unknown-type"
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:agent:micromentor.org::app:coding-app::agent:hadronmemory.com:coding-agent"
+      ],
+      "out": {
+        "type": "agent",
+        "pathSegments": [
+          "micromentor.org",
+          "coding-app",
+          "hadronmemory.com:coding-agent"
+        ],
+        "parserCanonical": "hrn:agent:micromentor.org::coding-app::hadronmemory.com:coding-agent",
+        "inputForm": "hrn:agent:micromentor.org::app:coding-app::agent:hadronmemory.com:coding-agent",
+        "parserRewrites": [
+          "type-marker-optionality"
+        ],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:memory:org::::app"
+      ],
+      "throws": "empty-segment"
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:memory:org::app::"
+      ],
+      "throws": "trailing-double-colon"
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:memory:micromentor.org::coding-app::coding-agent::system"
+      ],
+      "out": {
+        "type": "memory",
+        "pathSegments": [
+          "micromentor.org",
+          "coding-app",
+          "coding-agent",
+          "system"
+        ],
+        "parserCanonical": "hrn:memory:micromentor.org::coding-app::coding-agent::system",
+        "inputForm": "hrn:memory:micromentor.org::coding-app::coding-agent::system",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:memory:micromentor.org::coding-app::coding-agent::app-mem"
+      ],
+      "out": {
+        "type": "memory",
+        "pathSegments": [
+          "micromentor.org",
+          "coding-app",
+          "coding-agent",
+          "app-mem"
+        ],
+        "parserCanonical": "hrn:memory:micromentor.org::coding-app::coding-agent::app-mem",
+        "inputForm": "hrn:memory:micromentor.org::coding-app::coding-agent::app-mem",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:memory:micromentor.org::coding-app::coding-agent::app-user:shadowbrush"
+      ],
+      "out": {
+        "type": "memory",
+        "pathSegments": [
+          "micromentor.org",
+          "coding-app",
+          "coding-agent",
+          "app-user:shadowbrush"
+        ],
+        "parserCanonical": "hrn:memory:micromentor.org::coding-app::coding-agent::app-user:shadowbrush",
+        "inputForm": "hrn:memory:micromentor.org::coding-app::coding-agent::app-user:shadowbrush",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:memory:micromentor.org::coding-app::coding-agent::priv:shadowbrush"
+      ],
+      "out": {
+        "type": "memory",
+        "pathSegments": [
+          "micromentor.org",
+          "coding-app",
+          "coding-agent",
+          "priv:shadowbrush"
+        ],
+        "parserCanonical": "hrn:memory:micromentor.org::coding-app::coding-agent::priv:shadowbrush",
+        "inputForm": "hrn:memory:micromentor.org::coding-app::coding-agent::priv:shadowbrush",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:memory:micromentor.org::coding-app::coding-agent::group-mem:eng-team"
+      ],
+      "out": {
+        "type": "memory",
+        "pathSegments": [
+          "micromentor.org",
+          "coding-app",
+          "coding-agent",
+          "group-mem:eng-team"
+        ],
+        "parserCanonical": "hrn:memory:micromentor.org::coding-app::coding-agent::group-mem:eng-team",
+        "inputForm": "hrn:memory:micromentor.org::coding-app::coding-agent::group-mem:eng-team",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:memory:micromentor.org::coding-app::coding-agent::app-user:c0123abc456def789012345678"
+      ],
+      "out": {
+        "type": "memory",
+        "pathSegments": [
+          "micromentor.org",
+          "coding-app",
+          "coding-agent",
+          "app-user:c0123abc456def789012345678"
+        ],
+        "parserCanonical": "hrn:memory:micromentor.org::coding-app::coding-agent::app-user:c0123abc456def789012345678",
+        "inputForm": "hrn:memory:micromentor.org::coding-app::coding-agent::app-user:c0123abc456def789012345678",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:memory:micromentor.org::coding-app::coding-agent::priv:01234567890abcdef0123456789abcde"
+      ],
+      "out": {
+        "type": "memory",
+        "pathSegments": [
+          "micromentor.org",
+          "coding-app",
+          "coding-agent",
+          "priv:01234567890abcdef0123456789abcde"
+        ],
+        "parserCanonical": "hrn:memory:micromentor.org::coding-app::coding-agent::priv:01234567890abcdef0123456789abcde",
+        "inputForm": "hrn:memory:micromentor.org::coding-app::coding-agent::priv:01234567890abcdef0123456789abcde",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:memory:micromentor.org::coding-app::coding-agent::app-user:foo bar"
+      ],
+      "throws": "invalid-charset",
+      "offendingSegment": "foo bar"
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:loc:foo:bar"
+      ],
+      "throws": "loc-segment-rejected"
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:memory:org::loc:foo"
+      ],
+      "throws": "loc-segment-rejected"
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:org:baragaun.com"
+      ],
+      "out": {
+        "type": "org",
+        "pathSegments": [
+          "baragaun.com"
+        ],
+        "parserCanonical": "hrn:org:baragaun.com",
+        "inputForm": "hrn:org:baragaun.com",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:memory:acme.com::foo bar"
+      ],
+      "throws": "invalid-charset",
+      "offendingSegment": "foo bar"
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:memory:acme.com::system"
+      ],
+      "throws": "reserved-word-slug",
+      "offendingSegment": "system"
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:memory:acme.com::Agent"
+      ],
+      "throws": "reserved-word-slug",
+      "offendingSegment": "Agent"
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:memory:acme.com::aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-toolong"
+      ],
+      "throws": "slug-too-long"
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:agent:micromentor.org::coding-app::hadronmemory.com:coding-agent"
+      ],
+      "out": {
+        "type": "agent",
+        "pathSegments": [
+          "micromentor.org",
+          "coding-app",
+          "hadronmemory.com:coding-agent"
+        ],
+        "parserCanonical": "hrn:agent:micromentor.org::coding-app::hadronmemory.com:coding-agent",
+        "inputForm": "hrn:agent:micromentor.org::coding-app::hadronmemory.com:coding-agent",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:agent:micromentor.org::coding-app::competitor.com:coding-agent"
+      ],
+      "out": {
+        "type": "agent",
+        "pathSegments": [
+          "micromentor.org",
+          "coding-app",
+          "competitor.com:coding-agent"
+        ],
+        "parserCanonical": "hrn:agent:micromentor.org::coding-app::competitor.com:coding-agent",
+        "inputForm": "hrn:agent:micromentor.org::coding-app::competitor.com:coding-agent",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:memory:hadronmemory.com::hadronmemory.com:coding-agent::system"
+      ],
+      "out": {
+        "type": "memory",
+        "pathSegments": [
+          "hadronmemory.com",
+          "coding-agent",
+          "system"
+        ],
+        "parserCanonical": "hrn:memory:hadronmemory.com::coding-agent::system",
+        "inputForm": "hrn:memory:hadronmemory.com::hadronmemory.com:coding-agent::system",
+        "parserRewrites": [
+          "source-install-memory"
+        ],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:node:micromentor.org::coding-app::coding-agent::system::review:sort-imports"
+      ],
+      "out": {
+        "type": "node",
+        "pathSegments": [
+          "micromentor.org",
+          "coding-app",
+          "coding-agent",
+          "system",
+          "review:sort-imports"
+        ],
+        "parserCanonical": "hrn:node:micromentor.org::coding-app::coding-agent::system::review:sort-imports",
+        "inputForm": "hrn:node:micromentor.org::coding-app::coding-agent::system::review:sort-imports",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": true
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:prompt:micromentor.org::coding-app::coding-agent::system::notify"
+      ],
+      "out": {
+        "type": "prompt",
+        "pathSegments": [
+          "micromentor.org",
+          "coding-app",
+          "coding-agent",
+          "system",
+          "notify"
+        ],
+        "parserCanonical": "hrn:prompt:micromentor.org::coding-app::coding-agent::system::notify",
+        "inputForm": "hrn:prompt:micromentor.org::coding-app::coding-agent::system::notify",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:agent:micromentor.org::coding-app::coding-agent"
+      ],
+      "out": {
+        "type": "agent",
+        "pathSegments": [
+          "micromentor.org",
+          "coding-app",
+          "coding-agent"
+        ],
+        "parserCanonical": "hrn:agent:micromentor.org::coding-app::coding-agent",
+        "inputForm": "hrn:agent:micromentor.org::coding-app::coding-agent",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": true
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:agent:micromentor.org::app:coding-app::agent:hadronmemory.com:coding-agent"
+      ],
+      "out": {
+        "type": "agent",
+        "pathSegments": [
+          "micromentor.org",
+          "coding-app",
+          "hadronmemory.com:coding-agent"
+        ],
+        "parserCanonical": "hrn:agent:micromentor.org::coding-app::hadronmemory.com:coding-agent",
+        "inputForm": "hrn:agent:micromentor.org::app:coding-app::agent:hadronmemory.com:coding-agent",
+        "parserRewrites": [
+          "type-marker-optionality"
+        ],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:memory:micromentor.org::app:coding-app::agent:hadronmemory.com:coding-agent::memory:app-mem"
+      ],
+      "out": {
+        "type": "memory",
+        "pathSegments": [
+          "micromentor.org",
+          "coding-app",
+          "hadronmemory.com:coding-agent",
+          "app-mem"
+        ],
+        "parserCanonical": "hrn:memory:micromentor.org::coding-app::hadronmemory.com:coding-agent::app-mem",
+        "inputForm": "hrn:memory:micromentor.org::app:coding-app::agent:hadronmemory.com:coding-agent::memory:app-mem",
+        "parserRewrites": [
+          "type-marker-optionality"
+        ],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:agent:micromentor.org::app:coding-app::agent:coding-agent"
+      ],
+      "out": {
+        "type": "agent",
+        "pathSegments": [
+          "micromentor.org",
+          "coding-app",
+          "coding-agent"
+        ],
+        "parserCanonical": "hrn:agent:micromentor.org::coding-app::coding-agent",
+        "inputForm": "hrn:agent:micromentor.org::app:coding-app::agent:coding-agent",
+        "parserRewrites": [
+          "type-marker-optionality"
+        ],
+        "needsResolverCanonicalization": true
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:agent:micromentor.org::coding-app::hadronmemory.com:coding-agent"
+      ],
+      "out": {
+        "type": "agent",
+        "pathSegments": [
+          "micromentor.org",
+          "coding-app",
+          "hadronmemory.com:coding-agent"
+        ],
+        "parserCanonical": "hrn:agent:micromentor.org::coding-app::hadronmemory.com:coding-agent",
+        "inputForm": "hrn:agent:micromentor.org::coding-app::hadronmemory.com:coding-agent",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:prompt:micromentor.org::coding-app::coding-agent::system::review:sort-imports"
+      ],
+      "out": {
+        "type": "prompt",
+        "pathSegments": [
+          "micromentor.org",
+          "coding-app",
+          "coding-agent",
+          "system",
+          "review:sort-imports"
+        ],
+        "parserCanonical": "hrn:prompt:micromentor.org::coding-app::coding-agent::system::review:sort-imports",
+        "inputForm": "hrn:prompt:micromentor.org::coding-app::coding-agent::system::review:sort-imports",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:app:@holger::gmail-app"
+      ],
+      "out": {
+        "type": "app",
+        "pathSegments": [
+          "@holger",
+          "gmail-app"
+        ],
+        "parserCanonical": "hrn:app:@holger::gmail-app",
+        "inputForm": "hrn:app:@holger::gmail-app",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:agent:@holger::inbox-triage"
+      ],
+      "out": {
+        "type": "agent",
+        "pathSegments": [
+          "@holger",
+          "inbox-triage"
+        ],
+        "parserCanonical": "hrn:agent:@holger::inbox-triage",
+        "inputForm": "hrn:agent:@holger::inbox-triage",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:memory:@holger::inbox-triage"
+      ],
+      "out": {
+        "type": "memory",
+        "pathSegments": [
+          "@holger",
+          "inbox-triage"
+        ],
+        "parserCanonical": "hrn:memory:@holger::inbox-triage",
+        "inputForm": "hrn:memory:@holger::inbox-triage",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:node:@holger::gmail-app::inbox-triage::system::review:sort-imports"
+      ],
+      "out": {
+        "type": "node",
+        "pathSegments": [
+          "@holger",
+          "gmail-app",
+          "inbox-triage",
+          "system",
+          "review:sort-imports"
+        ],
+        "parserCanonical": "hrn:node:@holger::gmail-app::inbox-triage::system::review:sort-imports",
+        "inputForm": "hrn:node:@holger::gmail-app::inbox-triage::system::review:sort-imports",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": true
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:agent:@holger::@holger:triage"
+      ],
+      "out": {
+        "type": "agent",
+        "pathSegments": [
+          "@holger",
+          "triage"
+        ],
+        "parserCanonical": "hrn:agent:@holger::triage",
+        "inputForm": "hrn:agent:@holger::@holger:triage",
+        "parserRewrites": [
+          "source-install-memory"
+        ],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:user:@holger"
+      ],
+      "throws": "invalid-charset",
+      "offendingSegment": "@holger"
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:app:hadronmemory.com::@foo"
+      ],
+      "throws": "invalid-charset",
+      "offendingSegment": "@foo"
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:app:@::gmail-app"
+      ],
+      "throws": "invalid-segment-shape",
+      "offendingSegment": "@"
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:node:hadronmemory.com::gmail-app::inbox-triage::system::@foo:bar"
+      ],
+      "throws": "invalid-charset",
+      "offendingSegment": "@foo"
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:node:micromentor.org::coding-app::@holger:triage::system::review:foo"
+      ],
+      "out": {
+        "type": "node",
+        "pathSegments": [
+          "micromentor.org",
+          "coding-app",
+          "@holger:triage",
+          "system",
+          "review:foo"
+        ],
+        "parserCanonical": "hrn:node:micromentor.org::coding-app::@holger:triage::system::review:foo",
+        "inputForm": "hrn:node:micromentor.org::coding-app::@holger:triage::system::review:foo",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": true
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:agent:micromentor.org::app:gmail::agent:@holger:triage"
+      ],
+      "out": {
+        "type": "agent",
+        "pathSegments": [
+          "micromentor.org",
+          "gmail",
+          "@holger:triage"
+        ],
+        "parserCanonical": "hrn:agent:micromentor.org::gmail::@holger:triage",
+        "inputForm": "hrn:agent:micromentor.org::app:gmail::agent:@holger:triage",
+        "parserRewrites": [
+          "type-marker-optionality"
+        ],
+        "needsResolverCanonicalization": false
+      }
+    }
   ]
 }

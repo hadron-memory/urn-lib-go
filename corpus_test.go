@@ -14,10 +14,11 @@ import (
 // adding a corpus case, not by editing a test in one language.
 
 type corpusCase struct {
-	Fn     string          `json:"fn"`
-	In     []string        `json:"in"`
-	Out    json.RawMessage `json:"out"`
-	Throws string          `json:"throws"`
+	Fn               string          `json:"fn"`
+	In               []string        `json:"in"`
+	Out              json.RawMessage `json:"out"`
+	Throws           string          `json:"throws"`
+	OffendingSegment string          `json:"offendingSegment"`
 }
 
 // call dispatches a corpus fn. All corpus args are strings. Value-returning fns
@@ -89,6 +90,9 @@ func TestCorpus(t *testing.T) {
 				}
 				if string(pe.Reason) != c.Throws {
 					t.Fatalf("expected reason %q, got %q", c.Throws, pe.Reason)
+				}
+				if c.OffendingSegment != "" && pe.OffendingSegment != c.OffendingSegment {
+					t.Fatalf("expected offendingSegment %q, got %q", c.OffendingSegment, pe.OffendingSegment)
 				}
 				return
 			}
