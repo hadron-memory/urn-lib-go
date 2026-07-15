@@ -51,6 +51,21 @@
     { "fn": "deriveSlugFromName", "in": ["  Hello, World  "], "out": "hello-world" },
     { "fn": "deriveSlugFromName", "in": ["acme.com"], "out": "acme.com" },
     { "fn": "deriveSlugFromName", "in": ["café"], "out": "caf" },
-    { "fn": "deriveSlugFromName", "in": ["!!!"], "throws": "empty-derived-slug" }
+    { "fn": "deriveSlugFromName", "in": ["!!!"], "throws": "empty-derived-slug" },
+
+    { "fn": "formatUrn", "in": ["node", "acme.com::mem::loc"], "out": "hrn:node:acme.com::mem::loc" },
+    { "fn": "formatUrn", "in": ["user", "holger"], "out": "hrn:user:holger" },
+
+    { "fn": "parseUrnInput", "in": ["hrn:memory:acme.com::specs"], "out": { "type": "memory", "value": "acme.com::specs" } },
+    { "fn": "parseUrnInput", "in": ["urn:node:acme.com:mem:loc"], "out": { "type": "node", "value": "acme.com:mem:loc" } },
+    { "fn": "parseUrnInput", "in": ["loc:review:sort"], "out": { "type": "loc", "value": "review:sort" } },
+    { "fn": "parseUrnInput", "in": ["acme.com::specs"], "out": { "type": "unknown", "value": "acme.com::specs" } },
+    { "fn": "parseUrnInput", "in": ["hrn:secret:acme.com:key"], "out": { "type": "unknown", "value": "hrn:secret:acme.com:key" } },
+
+    { "fn": "validateUrnTypeFromInput", "in": ["hrn:memory:acme.com::specs", "memory"], "out": null },
+    { "fn": "validateUrnTypeFromInput", "in": ["acme.com::specs", "memory"], "out": null },
+    { "fn": "validateUrnTypeFromInput", "in": ["loc:foo", "node"], "out": null },
+    { "fn": "validateUrnTypeFromInput", "in": ["hrn:org:acme.com", "memory"], "out": "Expected memory URN (hrn:memory:...), got hrn:org:..." },
+    { "fn": "validateUrnTypeFromInput", "in": ["loc:foo", "memory"], "out": "Expected memory URN (hrn:memory:...), got hrn:loc:..." }
   ]
 }

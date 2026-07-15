@@ -40,6 +40,12 @@ func call(fn string, args []string) (any, error) {
 		return nil, ValidateOrgSlug(args[0])
 	case "deriveSlugFromName":
 		return DeriveSlugFromName(args[0])
+	case "formatUrn":
+		return FormatUrn(args[0], args[1]), nil
+	case "parseUrnInput":
+		return ParseUrnInput(args[0]), nil
+	case "validateUrnTypeFromInput":
+		return ValidateUrnType(ParseUrnInput(args[0]), args[1]), nil
 	default:
 		return nil, fmt.Errorf("unknown fn %q in corpus", fn)
 	}
@@ -79,12 +85,22 @@ func TestCorpus(t *testing.T) {
 				t.Fatalf("unexpected error: %v", err)
 			}
 			if len(c.Out) > 0 {
+				// JSON-normalize both sides so a Go struct/nil compares
+				// structurally against the corpus JSON (matches urn-lib-js).
 				var want any
 				if err := json.Unmarshal(c.Out, &want); err != nil {
 					t.Fatalf("bad `out` in corpus: %v", err)
 				}
-				if !reflect.DeepEqual(got, want) {
-					t.Fatalf("got %#v (%T), want %#v (%T)", got, got, want, want)
+				gotJSON, err := json.Marshal(got)
+				if err != nil {
+					t.Fatalf("marshal got: %v", err)
+				}
+				var gotNorm any
+				if err := json.Unmarshal(gotJSON, &gotNorm); err != nil {
+					t.Fatalf("normalize got: %v", err)
+				}
+				if !reflect.DeepEqual(gotNorm, want) {
+					t.Fatalf("got %s, want %s", gotJSON, c.Out)
 				}
 			}
 			// else: void success — reaching here (no error) is the pass.
