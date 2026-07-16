@@ -87,6 +87,16 @@ func call(fn string, args []string) (any, error) {
 		return ComposeUrnV2(args[0], args[1], args[2:]...)
 	case "isFlatV2":
 		return IsFlatV2(args[0]), nil
+	case "composeSecretUrnV2":
+		return ComposeSecretUrnV2(args[0], args[1])
+	case "composeAppRunUrnV2":
+		return ComposeAppRunUrnV2(args[0], args[1], args[2])
+	case "composeNodeRevUrnV2":
+		return ComposeNodeRevUrnV2(args[0], args[1], args[2], args[3])
+	case "composeDataFragmentV2":
+		return ComposeDataFragmentV2(args[0])
+	case "parseNodeRevUrnV2":
+		return ParseNodeRevUrnV2(args[0])
 	default:
 		return nil, fmt.Errorf("unknown fn %q in corpus", fn)
 	}
