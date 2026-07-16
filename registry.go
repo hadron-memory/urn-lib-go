@@ -6,7 +6,7 @@ package urn
 var CoreTypes = []string{
 	"agent", "app", "app-user", "ai-config", "asset", "edge",
 	"license", "memory", "node", "org", "platform", "reference",
-	"session", "subscription", "usage", "user",
+	"secret", "session", "subscription", "usage", "user",
 }
 
 // NodeTypes are the node types.
@@ -86,7 +86,8 @@ var nodeURNTypeSet = func() map[string]bool {
 
 // ownerNamespacedSet — types whose owner/author namespace may be an @<handle>.
 var ownerNamespacedSet = func() map[string]bool {
-	m := map[string]bool{"app": true, "agent": true, "memory": true, "edge": true}
+	// secret (#679): its owner ROOT may be a user @<handle> like the others.
+	m := map[string]bool{"app": true, "agent": true, "memory": true, "edge": true, "secret": true}
 	for k := range nodeURNTypeSet {
 		m[k] = true
 	}

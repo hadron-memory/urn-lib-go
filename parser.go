@@ -21,6 +21,35 @@ type ParsedURN struct {
 var locPrefixRe = regexp.MustCompile(`(?i)^((urn|hrn):)?loc:`)
 var prefixRe = regexp.MustCompile(`^(hrn|urn):([a-z][a-z0-9-]*):(.+)$`)
 var embeddedLocRe = regexp.MustCompile(`(^|::)loc:`)
+var secretUserRootRe = regexp.MustCompile(`^user:([A-Za-z0-9._-]+)$`)
+
+// rewriteSecretUserRoot (#679): normalize a `user:<handle>` secret owner-root to
+// the canonical `@<handle>` form. ROOT (position 0) only.
+func rewriteSecretUserRoot(segments []string) []string {
+	if len(segments) == 0 {
+		return segments
+	}
+	if m := secretUserRootRe.FindStringSubmatch(segments[0]); m != nil {
+		return append([]string{"@" + m[1]}, segments[1:]...)
+	}
+	return segments
+}
+
+// validateSecretSegments (#679): a secret URN is `<root>::[<app|memory>:<slug>::]<name>`
+// — at most 3 segments; when the middle owner segment is present it MUST be
+// exactly `app:<slug>` or `memory:<slug>`.
+func validateSecretSegments(input string, segments []string) error {
+	if len(segments) > 3 {
+		return &ParseError{Input: input, Reason: ReasonInvalidSegmentShape, OffendingSegment: segments[3]}
+	}
+	if len(segments) == 3 {
+		atoms := strings.Split(segments[1], ":")
+		if len(atoms) != 2 || (atoms[0] != "app" && atoms[0] != "memory") {
+			return &ParseError{Input: input, Reason: ReasonInvalidSegmentShape, OffendingSegment: segments[1]}
+		}
+	}
+	return nil
+}
 
 // validatePathSegment: per-segment charset/length validation + the spec-047
 // @<handle> owner-namespace gate.
@@ -88,6 +117,10 @@ func rejectInvalidSegmentShapes(input, typ string, segments []string) error {
 }
 
 func rejectReservedWordsAtIllegalPositions(input, typ string, segments []string) error {
+	// secret (#679): enforce its own shape here (it skips cat-4 stripping).
+	if typ == "secret" {
+		return validateSecretSegments(input, segments)
+	}
 	finalIdx := len(segments) - 1
 	roleMarkerIdx := -1 // -1 = no structural role-marker position
 	minSegments := 0
@@ -127,6 +160,10 @@ func rejectReservedWordsAtIllegalPositions(input, typ string, segments []string)
 }
 
 func stripTypeMarkers(segments []string, urnType string) ([]string, bool) {
+	// secret (#679): the app:/memory: marker is STRUCTURAL — never strip it.
+	if urnType == "secret" {
+		return segments, false
+	}
 	fired := false
 	isNodeURN := nodeURNTypeSet[urnType]
 	lastIdx := len(segments) - 1
@@ -215,8 +252,16 @@ func ParseUrn(input string) (ParsedURN, error) {
 			return ParsedURN{}, &ParseError{Input: input, Reason: ReasonEmptySegment}
 		}
 	}
-	for i := 0; i < len(rawSegments); i++ {
-		if err := validatePathSegment(input, rawSegments[i], typ, i, len(rawSegments)); err != nil {
+
+	// secret (#679): normalize a `user:<handle>` owner-root to `@<handle>` at
+	// ROOT position 0 before the shape checks.
+	workSegments := rawSegments
+	if typ == "secret" {
+		workSegments = rewriteSecretUserRoot(rawSegments)
+	}
+
+	for i := 0; i < len(workSegments); i++ {
+		if err := validatePathSegment(input, workSegments[i], typ, i, len(workSegments)); err != nil {
 			return ParsedURN{}, err
 		}
 	}
@@ -226,7 +271,7 @@ func ParseUrn(input string) (ParsedURN, error) {
 		parserRewrites = append(parserRewrites, "legacy-urn-scheme")
 	}
 
-	cat4Segments, cat4Fired := stripTypeMarkers(rawSegments, typ)
+	cat4Segments, cat4Fired := stripTypeMarkers(workSegments, typ)
 	if cat4Fired {
 		parserRewrites = append(parserRewrites, "type-marker-optionality")
 	}

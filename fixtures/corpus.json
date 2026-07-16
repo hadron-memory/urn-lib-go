@@ -1,8 +1,8 @@
 {
   "_meta": {
-    "corpusVersion": 2,
+    "corpusVersion": 3,
     "grammar": "v1-parity",
-    "note": "Language-agnostic conformance corpus. Every urn-lib implementation (js, go, ...) MUST run these. Each case: {fn, in:[args], out?:value, throws?:reasonCode}. `out` present = expected return; `throws` present = expected UrnParseError.reason; neither = void call that must not throw. This is the CONTRACT; ported from hadron-server src/lib/urn.ts. Grammar-v2 cases (flat forms, apprun, #data) are added in a later increment behind this same corpus. v2 adds the hadron-server parser golden-set (parser-golden-set.json) — the authoritative parseUrn suite incl. spec-047 @handle, D11 cats, role markers, R2 installs.",
+    "note": "Language-agnostic conformance corpus. Every urn-lib implementation (js, go, ...) MUST run these. Each case: {fn, in:[args], out?:value, throws?:reasonCode}. `out` present = expected return; `throws` present = expected UrnParseError.reason; neither = void call that must not throw. This is the CONTRACT; ported from hadron-server src/lib/urn.ts. Grammar-v2 cases (flat forms, apprun, #data) are added in a later increment behind this same corpus. v2 adds the hadron-server parser golden-set (parser-golden-set.json) — the authoritative parseUrn suite incl. spec-047 @handle, D11 cats, role markers, R2 installs. v3 adds the secret URN type (#684/#679): owner-scoped shape, user:handle->@handle root rewrite, app:/memory: marker validation.",
     "source": "hadron-server/src/lib/urn.ts"
   },
   "cases": [
@@ -1497,6 +1497,154 @@
         "1"
       ],
       "throws": "malformed-grammar"
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:secret:acme.com::stripe-key"
+      ],
+      "out": {
+        "type": "secret",
+        "pathSegments": [
+          "acme.com",
+          "stripe-key"
+        ],
+        "parserCanonical": "hrn:secret:acme.com::stripe-key",
+        "inputForm": "hrn:secret:acme.com::stripe-key",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:secret:@holger::stripe-key"
+      ],
+      "out": {
+        "type": "secret",
+        "pathSegments": [
+          "@holger",
+          "stripe-key"
+        ],
+        "parserCanonical": "hrn:secret:@holger::stripe-key",
+        "inputForm": "hrn:secret:@holger::stripe-key",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:secret:user:holger::stripe-key"
+      ],
+      "out": {
+        "type": "secret",
+        "pathSegments": [
+          "@holger",
+          "stripe-key"
+        ],
+        "parserCanonical": "hrn:secret:@holger::stripe-key",
+        "inputForm": "hrn:secret:user:holger::stripe-key",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:secret:acme.com::app:internal-ops::stripe-key"
+      ],
+      "out": {
+        "type": "secret",
+        "pathSegments": [
+          "acme.com",
+          "app:internal-ops",
+          "stripe-key"
+        ],
+        "parserCanonical": "hrn:secret:acme.com::app:internal-ops::stripe-key",
+        "inputForm": "hrn:secret:acme.com::app:internal-ops::stripe-key",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:secret:@holger::app:gmail-app::stripe-key"
+      ],
+      "out": {
+        "type": "secret",
+        "pathSegments": [
+          "@holger",
+          "app:gmail-app",
+          "stripe-key"
+        ],
+        "parserCanonical": "hrn:secret:@holger::app:gmail-app::stripe-key",
+        "inputForm": "hrn:secret:@holger::app:gmail-app::stripe-key",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:secret:acme.com::memory:secureid::stripe-key"
+      ],
+      "out": {
+        "type": "secret",
+        "pathSegments": [
+          "acme.com",
+          "memory:secureid",
+          "stripe-key"
+        ],
+        "parserCanonical": "hrn:secret:acme.com::memory:secureid::stripe-key",
+        "inputForm": "hrn:secret:acme.com::memory:secureid::stripe-key",
+        "parserRewrites": [],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "urn:secret:acme.com::app:internal-ops::stripe-key"
+      ],
+      "out": {
+        "type": "secret",
+        "pathSegments": [
+          "acme.com",
+          "app:internal-ops",
+          "stripe-key"
+        ],
+        "parserCanonical": "hrn:secret:acme.com::app:internal-ops::stripe-key",
+        "inputForm": "urn:secret:acme.com::app:internal-ops::stripe-key",
+        "parserRewrites": [
+          "legacy-urn-scheme"
+        ],
+        "needsResolverCanonicalization": false
+      }
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:secret:acme.com::agent:x::stripe-key"
+      ],
+      "throws": "invalid-segment-shape",
+      "offendingSegment": "agent:x"
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:secret:acme.com::app:x:y::stripe-key"
+      ],
+      "throws": "invalid-segment-shape",
+      "offendingSegment": "app:x:y"
+    },
+    {
+      "fn": "parseUrn",
+      "in": [
+        "hrn:secret:acme.com::app:ops::extra::stripe-key"
+      ],
+      "throws": "invalid-segment-shape"
     }
   ]
 }
