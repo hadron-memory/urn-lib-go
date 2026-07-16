@@ -42,6 +42,8 @@ func call(fn string, args []string) (any, error) {
 		return nil, ValidateUserSlug(args[0])
 	case "validateOrgSlug":
 		return nil, ValidateOrgSlug(args[0])
+	case "validateUserHandle":
+		return nil, ValidateUserHandle(args[0])
 	case "deriveSlugFromName":
 		return DeriveSlugFromName(args[0])
 	case "formatUrn":

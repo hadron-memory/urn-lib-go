@@ -112,12 +112,33 @@ func ValidateUserSlug(slug string) error {
 }
 
 // ValidateOrgSlug validates an org slug: it must be bare (no scheme prefix, no
-// colon), then reuses the shared slug rules.
+// colon), reuse the shared slug rules, and — for a NEW org root (#692) — be a
+// dotted domain. Create/rename rule only; the parse/read path stays lenient.
 func ValidateOrgSlug(slug string) error {
 	if HasSchemePrefix(slug) || strings.Contains(slug, ":") {
 		return &ParseError{Input: slug, Reason: ReasonOrgUrnNotBare, OffendingSegment: slug}
 	}
-	return ValidateUserSlug(slug)
+	if err := ValidateUserSlug(slug); err != nil {
+		return err
+	}
+	if !strings.Contains(slug, ".") {
+		return &ParseError{Input: slug, Reason: ReasonOrgRootNotDotted, OffendingSegment: slug}
+	}
+	return nil
+}
+
+// ValidateUserHandle validates a user handle at create/rename (#692): a
+// ValidateUserSlug slug that must additionally be dot-free, so it stays
+// charset-disjoint from a dotted org root in the shared principal pool.
+// Registration policy, not a parse rule.
+func ValidateUserHandle(handle string) error {
+	if err := ValidateUserSlug(handle); err != nil {
+		return err
+	}
+	if strings.Contains(handle, ".") {
+		return &ParseError{Input: handle, Reason: ReasonHandleHasDot, OffendingSegment: handle}
+	}
+	return nil
 }
 
 var nonAtomRe = regexp.MustCompile(`[^a-z0-9._-]+`)
