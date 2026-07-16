@@ -84,6 +84,10 @@ func validateV2Arity(input, typ string, segments []string) error {
 		if len(segments) < 3 {
 			return &ParseError{Input: input, Reason: ReasonInvalidSegmentShape}
 		}
+	case "node", "edge": // <root>:<mem>:<loc...> — a memory + at least one loc atom.
+		if len(segments) < 2 {
+			return &ParseError{Input: input, Reason: ReasonInvalidSegmentShape}
+		}
 	}
 	return nil
 }
@@ -99,7 +103,7 @@ func ParseUrnV2(input string) (ParsedURNV2, error) {
 		fragment = input[i+1:]
 		core = input[:i]
 		if !v2Fragments[fragment] {
-			return ParsedURNV2{}, &ParseError{Input: input, Reason: ReasonInvalidSegmentShape, OffendingSegment: fragment}
+			return ParsedURNV2{}, &ParseError{Input: input, Reason: ReasonInvalidSegmentShape, OffendingSegment: "#" + fragment}
 		}
 	}
 	m := v2PrefixRe.FindStringSubmatch(core)
@@ -145,11 +149,14 @@ func ComposeUrnV2(typ, root string, segments ...string) (string, error) {
 			return "", err
 		}
 	}
-	if err := validateV2Arity(CanonicalScheme+":"+typ+":"+root, typ, segments); err != nil {
+	all := append([]string{root}, segments...)
+	urn := CanonicalScheme + ":" + typ + ":" + strings.Join(all, ":")
+	// Validate arity against the FULL composed URN so a thrown error's Input
+	// reflects what the caller asked for (not a truncated prefix).
+	if err := validateV2Arity(urn, typ, segments); err != nil {
 		return "", err
 	}
-	all := append([]string{root}, segments...)
-	return CanonicalScheme + ":" + typ + ":" + strings.Join(all, ":"), nil
+	return urn, nil
 }
 
 // IsFlatV2 reports whether input is already a canonical grammar-v2 flat URN.
@@ -183,7 +190,9 @@ func ComposeAppRunUrnV2(root, app, runID string) (string, error) {
 // terminal rev stays end-anchored.
 func ComposeNodeRevUrnV2(root, mem, loc, rev string) (string, error) {
 	locAtoms := strings.Split(loc, ":")
-	segments := append([]string{mem}, locAtoms...)
+	segments := make([]string, 0, 2+len(locAtoms))
+	segments = append(segments, mem)
+	segments = append(segments, locAtoms...)
 	segments = append(segments, rev)
 	return ComposeUrnV2("noderev", root, segments...)
 }
@@ -197,7 +206,10 @@ func ComposeDataFragmentV2(parentURN string) (string, error) {
 	if !v2FragmentParentTypes[p.Type] || p.Fragment != "" {
 		return "", &ParseError{Input: parentURN, Reason: ReasonInvalidSegmentShape, OffendingSegment: parentURN}
 	}
-	return parentURN + "#data", nil
+	// Recompose from the parsed pieces so the result is always canonical hrn: —
+	// a legacy urn:-scheme parent must not leak its scheme into the emission.
+	all := append([]string{p.Root}, p.Segments...)
+	return CanonicalScheme + ":" + p.Type + ":" + strings.Join(all, ":") + "#data", nil
 }
 
 // ParseNodeRevUrnV2 parses and END-ANCHORED-decomposes a hrn:noderev URN (#696).
