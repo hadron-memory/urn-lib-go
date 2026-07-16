@@ -75,6 +75,18 @@ func call(fn string, args []string) (any, error) {
 			norm = &tt
 		}
 		return ParseFor(UrnRow{URN: args[0], URNNormalizedAt: norm})
+	case "parseDisplayUrn":
+		hint := ""
+		if len(args) > 1 {
+			hint = args[1]
+		}
+		return ParseDisplayUrn(args[0], hint), nil
+	case "parseUrnV2":
+		return ParseUrnV2(args[0])
+	case "composeUrnV2":
+		return ComposeUrnV2(args[0], args[1], args[2:]...)
+	case "isFlatV2":
+		return IsFlatV2(args[0]), nil
 	default:
 		return nil, fmt.Errorf("unknown fn %q in corpus", fn)
 	}

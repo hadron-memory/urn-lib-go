@@ -1,8 +1,8 @@
 {
   "_meta": {
-    "corpusVersion": 3,
+    "corpusVersion": 4,
     "grammar": "v1-parity",
-    "note": "Language-agnostic conformance corpus. Every urn-lib implementation (js, go, ...) MUST run these. Each case: {fn, in:[args], out?:value, throws?:reasonCode}. `out` present = expected return; `throws` present = expected UrnParseError.reason; neither = void call that must not throw. This is the CONTRACT; ported from hadron-server src/lib/urn.ts. Grammar-v2 cases (flat forms, apprun, #data) are added in a later increment behind this same corpus. v2 adds the hadron-server parser golden-set (parser-golden-set.json) — the authoritative parseUrn suite incl. spec-047 @handle, D11 cats, role markers, R2 installs. v3 adds the secret URN type (#684/#679): owner-scoped shape, user:handle->@handle root rewrite, app:/memory: marker validation.",
+    "note": "Language-agnostic conformance corpus. Every urn-lib implementation (js, go, ...) MUST run these. Each case: {fn, in:[args], out?:value, throws?:reasonCode}. `out` present = expected return; `throws` present = expected UrnParseError.reason; neither = void call that must not throw. This is the CONTRACT; ported from hadron-server src/lib/urn.ts. Grammar-v2 cases (flat forms, apprun, #data) are added in a later increment behind this same corpus. v2 adds the hadron-server parser golden-set (parser-golden-set.json) — the authoritative parseUrn suite incl. spec-047 @handle, D11 cats, role markers, R2 installs. v3 adds the secret URN type (#684/#679): owner-scoped shape, user:handle->@handle root rewrite, app:/memory: marker validation. v4 adds the display-chip parser (#1): parseDisplayUrn splits a displayable URN into {type, bareValue, fullUrn}, accepts legacy urn: input, emits canonical hrn:, preserves the full post-kind bareValue, supports a type hint, and falls back to unknown for unregistered display kinds. v4 adds grammar-v2 flat forms (#694): parseUrnV2/composeUrnV2/isFlatV2 — hrn:<type>:<root>[:<seg>...], single colon, no sigil, additive to v1.",
     "source": "hadron-server/src/lib/urn.ts"
   },
   "cases": [
@@ -1645,6 +1645,323 @@
         "hrn:secret:acme.com::app:ops::extra::stripe-key"
       ],
       "throws": "invalid-segment-shape"
+    },
+    {
+      "fn": "parseDisplayUrn",
+      "in": [
+        "hrn:org:micromentor.org"
+      ],
+      "out": {
+        "type": "org",
+        "bareValue": "micromentor.org",
+        "fullUrn": "hrn:org:micromentor.org"
+      }
+    },
+    {
+      "fn": "parseDisplayUrn",
+      "in": [
+        "urn:memory:micromentor.org:mmdata"
+      ],
+      "out": {
+        "type": "memory",
+        "bareValue": "micromentor.org:mmdata",
+        "fullUrn": "hrn:memory:micromentor.org:mmdata"
+      }
+    },
+    {
+      "fn": "parseDisplayUrn",
+      "in": [
+        "urn:node:micromentor.org:mmdata:review:sort-imports"
+      ],
+      "out": {
+        "type": "node",
+        "bareValue": "micromentor.org:mmdata:review:sort-imports",
+        "fullUrn": "hrn:node:micromentor.org:mmdata:review:sort-imports"
+      }
+    },
+    {
+      "fn": "parseDisplayUrn",
+      "in": [
+        "hrn:apprun:hadronmemory.com:chatbot:run_123"
+      ],
+      "out": {
+        "type": "apprun",
+        "bareValue": "hadronmemory.com:chatbot:run_123",
+        "fullUrn": "hrn:apprun:hadronmemory.com:chatbot:run_123"
+      }
+    },
+    {
+      "fn": "parseDisplayUrn",
+      "in": [
+        "hrn:user:@holger"
+      ],
+      "out": {
+        "type": "user",
+        "bareValue": "@holger",
+        "fullUrn": "hrn:user:@holger"
+      }
+    },
+    {
+      "fn": "parseDisplayUrn",
+      "in": [
+        "hrn:secret:acme.com::stripe-key"
+      ],
+      "out": {
+        "type": "unknown",
+        "bareValue": "hrn:secret:acme.com::stripe-key",
+        "fullUrn": "hrn:unknown:hrn:secret:acme.com::stripe-key"
+      }
+    },
+    {
+      "fn": "parseDisplayUrn",
+      "in": [
+        "micromentor.org",
+        "org"
+      ],
+      "out": {
+        "type": "org",
+        "bareValue": "micromentor.org",
+        "fullUrn": "hrn:org:micromentor.org"
+      }
+    },
+    {
+      "fn": "parseDisplayUrn",
+      "in": [
+        "not-a-urn-value"
+      ],
+      "out": {
+        "type": "unknown",
+        "bareValue": "not-a-urn-value",
+        "fullUrn": "hrn:unknown:not-a-urn-value"
+      }
+    },
+    {
+      "fn": "parseDisplayUrn",
+      "in": [
+        "hrn:secret:acme.com::stripe-key",
+        "memory"
+      ],
+      "out": {
+        "type": "unknown",
+        "bareValue": "hrn:secret:acme.com::stripe-key",
+        "fullUrn": "hrn:unknown:hrn:secret:acme.com::stripe-key"
+      }
+    },
+    {
+      "fn": "parseUrnV2",
+      "in": [
+        "hrn:org:baragaun.com"
+      ],
+      "out": {
+        "scheme": "hrn",
+        "type": "org",
+        "root": "baragaun.com",
+        "segments": []
+      }
+    },
+    {
+      "fn": "parseUrnV2",
+      "in": [
+        "hrn:user:holger"
+      ],
+      "out": {
+        "scheme": "hrn",
+        "type": "user",
+        "root": "holger",
+        "segments": []
+      }
+    },
+    {
+      "fn": "parseUrnV2",
+      "in": [
+        "hrn:mem:holger:my-stuff"
+      ],
+      "out": {
+        "scheme": "hrn",
+        "type": "mem",
+        "root": "holger",
+        "segments": [
+          "my-stuff"
+        ]
+      }
+    },
+    {
+      "fn": "parseUrnV2",
+      "in": [
+        "hrn:mem:baragaun.com:ops"
+      ],
+      "out": {
+        "scheme": "hrn",
+        "type": "mem",
+        "root": "baragaun.com",
+        "segments": [
+          "ops"
+        ]
+      }
+    },
+    {
+      "fn": "parseUrnV2",
+      "in": [
+        "hrn:agent:acme.com:code-generator"
+      ],
+      "out": {
+        "scheme": "hrn",
+        "type": "agent",
+        "root": "acme.com",
+        "segments": [
+          "code-generator"
+        ]
+      }
+    },
+    {
+      "fn": "parseUrnV2",
+      "in": [
+        "hrn:secret:acme.com:stripe-key"
+      ],
+      "out": {
+        "scheme": "hrn",
+        "type": "secret",
+        "root": "acme.com",
+        "segments": [
+          "stripe-key"
+        ]
+      }
+    },
+    {
+      "fn": "parseUrnV2",
+      "in": [
+        "hrn:node:baragaun.com:code-generator-system:tasks:run-bg-code-gen"
+      ],
+      "out": {
+        "scheme": "hrn",
+        "type": "node",
+        "root": "baragaun.com",
+        "segments": [
+          "code-generator-system",
+          "tasks",
+          "run-bg-code-gen"
+        ]
+      }
+    },
+    {
+      "fn": "parseUrnV2",
+      "in": [
+        "urn:mem:holger:notes"
+      ],
+      "out": {
+        "scheme": "hrn",
+        "type": "mem",
+        "root": "holger",
+        "segments": [
+          "notes"
+        ]
+      }
+    },
+    {
+      "fn": "parseUrnV2",
+      "in": [
+        "hrn:memory:acme.com::mmdata"
+      ],
+      "throws": "unknown-type"
+    },
+    {
+      "fn": "parseUrnV2",
+      "in": [
+        "hrn:mem:acme.com::mmdata"
+      ],
+      "throws": "malformed-grammar"
+    },
+    {
+      "fn": "parseUrnV2",
+      "in": [
+        "hrn:mem:@holger:notes"
+      ],
+      "throws": "invalid-charset"
+    },
+    {
+      "fn": "parseUrnV2",
+      "in": [
+        "hrn:bogus:x"
+      ],
+      "throws": "unknown-type"
+    },
+    {
+      "fn": "parseUrnV2",
+      "in": [
+        "notaurn"
+      ],
+      "throws": "malformed-grammar"
+    },
+    {
+      "fn": "parseUrnV2",
+      "in": [
+        "hrn:mem:acme.com:"
+      ],
+      "throws": "invalid-segment-shape"
+    },
+    {
+      "fn": "composeUrnV2",
+      "in": [
+        "node",
+        "baragaun.com",
+        "code-generator-system",
+        "tasks",
+        "run-bg-code-gen"
+      ],
+      "out": "hrn:node:baragaun.com:code-generator-system:tasks:run-bg-code-gen"
+    },
+    {
+      "fn": "composeUrnV2",
+      "in": [
+        "org",
+        "baragaun.com"
+      ],
+      "out": "hrn:org:baragaun.com"
+    },
+    {
+      "fn": "composeUrnV2",
+      "in": [
+        "mem",
+        "holger",
+        "my-stuff"
+      ],
+      "out": "hrn:mem:holger:my-stuff"
+    },
+    {
+      "fn": "composeUrnV2",
+      "in": [
+        "bogus",
+        "x"
+      ],
+      "throws": "unknown-type"
+    },
+    {
+      "fn": "isFlatV2",
+      "in": [
+        "hrn:mem:holger:notes"
+      ],
+      "out": true
+    },
+    {
+      "fn": "isFlatV2",
+      "in": [
+        "urn:mem:holger:notes"
+      ],
+      "out": false
+    },
+    {
+      "fn": "isFlatV2",
+      "in": [
+        "hrn:mem:acme.com::mmdata"
+      ],
+      "out": false
+    },
+    {
+      "fn": "isFlatV2",
+      "in": [
+        "hrn:memory:acme.com:mmdata"
+      ],
+      "out": false
     }
   ]
 }
