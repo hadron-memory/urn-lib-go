@@ -1,8 +1,8 @@
 {
   "_meta": {
-    "corpusVersion": 7,
+    "corpusVersion": 8,
     "grammar": "v1-parity",
-    "note": "Language-agnostic conformance corpus. Every urn-lib implementation (js, go, ...) MUST run these. Each case: {fn, in:[args], out?:value, throws?:reasonCode}. `out` present = expected return; `throws` present = expected UrnParseError.reason; neither = void call that must not throw. This is the CONTRACT; ported from hadron-server src/lib/urn.ts. Grammar-v2 cases (flat forms, apprun, #data) are present from v4/v5 onward (see below). v2 adds the hadron-server parser golden-set (parser-golden-set.json) — the authoritative parseUrn suite incl. spec-047 @handle, D11 cats, role markers, R2 installs. v3 adds the secret URN type (#684/#679): owner-scoped shape, user:handle->@handle root rewrite, app:/memory: marker validation. v4 adds the display-chip parser (#1): parseDisplayUrn splits a displayable URN into {type, bareValue, fullUrn}, accepts legacy urn: input, emits canonical hrn:, preserves the full post-kind bareValue, supports a type hint, and falls back to unknown for unregistered display kinds. v4 adds grammar-v2 flat forms (#694): parseUrnV2/composeUrnV2/isFlatV2 — hrn:<type>:<root>[:<seg>...], single colon, no sigil, additive to v1. v5 adds the #696 per-entity v2 shapes (D-2026-07-15-006): secret org/user-only (exactly one name atom, app/memory markers rejected), apprun (hrn:apprun:<root>:<app>:<run-id>, fixed arity), noderev END-ANCHORED (hrn:noderev:<root>:<mem>:<loc...>:<rev>, last atom = revision id), node/edge opaque-terminal loc, and the #data fragment of a node/apprun parent — with typed compose helpers (composeSecretUrnV2/composeAppRunUrnV2/composeNodeRevUrnV2/composeDataFragmentV2) and the end-anchored decomposer parseNodeRevUrnV2. v6 tightens the #696 shapes per review: node/edge now REQUIRE their documented <mem>:<loc...> arity (>=2 post-root segments, so a mem-only node/edge and a #data fragment on one are rejected), and composeDataFragmentV2 emits a canonical hrn: URN even when given a legacy urn:-scheme parent. v7 adds the #692 registration-policy validators: validateOrgSlug now requires a dotted root (org-root-not-dotted) and validateUserHandle rejects a dot (handle-has-dot) so org roots and user handles stay charset-disjoint in the shared per-server principal pool — create/rename rules only; the parse/read path stays lenient (existing undotted orgs / dotted handles still resolve).",
+    "note": "Language-agnostic conformance corpus. Every urn-lib implementation (js, go, ...) MUST run these. Each case: {fn, in:[args], out?:value, throws?:reasonCode}. `out` present = expected return; `throws` present = expected UrnParseError.reason; neither = void call that must not throw. This is the CONTRACT; ported from hadron-server src/lib/urn.ts. Grammar-v2 cases (flat forms, apprun, #data) are present from v4/v5 onward (see below). v2 adds the hadron-server parser golden-set (parser-golden-set.json) — the authoritative parseUrn suite incl. spec-047 @handle, D11 cats, role markers, R2 installs. v3 adds the secret URN type (#684/#679): owner-scoped shape, user:handle->@handle root rewrite, app:/memory: marker validation. v4 adds the display-chip parser (#1): parseDisplayUrn splits a displayable URN into {type, bareValue, fullUrn}, accepts legacy urn: input, emits canonical hrn:, preserves the full post-kind bareValue, supports a type hint, and falls back to unknown for unregistered display kinds. v4 adds grammar-v2 flat forms (#694): parseUrnV2/composeUrnV2/isFlatV2 — hrn:<type>:<root>[:<seg>...], single colon, no sigil, additive to v1. v5 adds the #696 per-entity v2 shapes (D-2026-07-15-006): secret org/user-only (exactly one name atom, app/memory markers rejected), apprun (hrn:apprun:<root>:<app>:<run-id>, fixed arity), noderev END-ANCHORED (hrn:noderev:<root>:<mem>:<loc...>:<rev>, last atom = revision id), node/edge opaque-terminal loc, and the #data fragment of a node/apprun parent — with typed compose helpers (composeSecretUrnV2/composeAppRunUrnV2/composeNodeRevUrnV2/composeDataFragmentV2) and the end-anchored decomposer parseNodeRevUrnV2. v6 tightens the #696 shapes per review: node/edge now REQUIRE their documented <mem>:<loc...> arity (>=2 post-root segments, so a mem-only node/edge and a #data fragment on one are rejected), and composeDataFragmentV2 emits a canonical hrn: URN even when given a legacy urn:-scheme parent. v7 adds the #692 registration-policy validators: validateOrgSlug now requires a dotted root (org-root-not-dotted) and validateUserHandle rejects a dot (handle-has-dot) so org roots and user handles stay charset-disjoint in the shared per-server principal pool — create/rename rules only; the parse/read path stays lenient (existing undotted orgs / dotted handles still resolve). v8 adds the #697 emission-flip `mem` type-word acceptance: parseUrnInput normalizes the grammar-v2 `mem` word to `memory` (v1 `memory` stays accepted forever), and assertFullyQualifiedUrn treats `mem` as a `memory` alias at the boundary so a v2-emitted hrn:mem:<root>:<slug> round-trips.",
     "source": "hadron-server/src/lib/urn.ts"
   },
   "cases": [
@@ -2293,6 +2293,56 @@
         "hrn:node:acme.com"
       ],
       "throws": "invalid-segment-shape"
+    },
+    {
+      "fn": "parseUrnInput",
+      "in": [
+        "hrn:mem:acme.com:notes"
+      ],
+      "out": {
+        "type": "memory",
+        "value": "acme.com:notes"
+      }
+    },
+    {
+      "fn": "parseUrnInput",
+      "in": [
+        "urn:mem:acme.com:notes"
+      ],
+      "out": {
+        "type": "memory",
+        "value": "acme.com:notes"
+      }
+    },
+    {
+      "fn": "assertFullyQualifiedUrn",
+      "in": [
+        "hrn:mem:acme.com:notes",
+        "memory"
+      ]
+    },
+    {
+      "fn": "assertFullyQualifiedUrn",
+      "in": [
+        "urn:mem:acme.com:notes",
+        "memory"
+      ]
+    },
+    {
+      "fn": "assertFullyQualifiedUrn",
+      "in": [
+        "hrn:mem:acme.com:mmdata:review:sort",
+        "node"
+      ],
+      "throwsQualified": true
+    },
+    {
+      "fn": "assertFullyQualifiedUrn",
+      "in": [
+        "hrn:mem:acme.com:notes",
+        "app"
+      ],
+      "throwsQualified": true
     }
   ]
 }
