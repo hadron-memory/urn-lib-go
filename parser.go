@@ -224,9 +224,71 @@ func needsCat3(typ string, segments []string) bool {
 	return len(strings.Split(installSlot, ":")) == 1
 }
 
+// v2ToV1Type maps grammar-v2 flat type words that have a v1 canonical
+// equivalent to it. A v2-emitted URN of one of these types is delegated to
+// ParseUrnV2 and mapped into the ParsedURN shape (mem->memory, #697 emission
+// flip). v2-ONLY types (apprun, noderev, appkey, ...) are absent on purpose —
+// they never existed in the v1 parser surface, so a hrn:apprun:... input keeps
+// its v1 unknown-type error rather than gaining a partial parse here.
+var v2ToV1Type = map[string]string{
+	"mem": "memory", "org": "org", "user": "user", "agent": "agent", "app": "app",
+	"node": "node", "edge": "edge", "asset": "asset", "secret": "secret",
+}
+
+// tryParseFlatV2 delegates a v1-rejected input to the grammar-v2 flat parser
+// (#697). Returns (parsed, true) when input is a flat-v2 URN of a type with a v1
+// equivalent, else (_, false) so ParseUrn rethrows the original v1 error. Type
+// is the mapped v1 word (for consumer switch dispatch) while ParserCanonical
+// keeps the actual v2 type word so the canonical string round-trips. v2 is
+// already flat/pool-rooted, so no D11 resolver canonicalization applies.
+func tryParseFlatV2(input string) (ParsedURN, bool) {
+	parsed, err := ParseUrnV2(input)
+	if err != nil {
+		return ParsedURN{}, false
+	}
+	mappedType, ok := v2ToV1Type[parsed.Type]
+	if !ok {
+		return ParsedURN{}, false
+	}
+	parserRewrites := []string{}
+	if strings.HasPrefix(input, LegacyScheme+":") {
+		parserRewrites = append(parserRewrites, "legacy-urn-scheme")
+	}
+	pathSegments := append([]string{parsed.Root}, parsed.Segments...)
+	frag := ""
+	if parsed.Fragment != "" {
+		frag = "#" + parsed.Fragment
+	}
+	return ParsedURN{
+		Type:                          mappedType,
+		PathSegments:                  pathSegments,
+		ParserCanonical:               CanonicalScheme + ":" + parsed.Type + ":" + strings.Join(pathSegments, ":") + frag,
+		InputForm:                     input,
+		ParserRewrites:                parserRewrites,
+		NeedsResolverCanonicalization: false,
+	}, true
+}
+
 // ParseUrn parses a URN string, applying parser-layer canonicalization (D11
-// cats 1, 4). Returns a *ParseError on any acceptance violation.
+// cats 1, 4). Returns a *ParseError on any acceptance violation. The v1 grammar
+// is tried first; a v1-rejected input that is a valid flat grammar-v2 URN
+// (single-colon, pool-rooted, `mem` type word — #697) is delegated to
+// ParseUrnV2 and mapped into the ParsedURN shape. v1-accepted inputs keep their
+// exact v1 result, so no existing behavior changes.
 func ParseUrn(input string) (ParsedURN, error) {
+	parsed, err := parseUrnV1(input)
+	if err != nil {
+		if v2, ok := tryParseFlatV2(input); ok {
+			return v2, nil
+		}
+		return ParsedURN{}, err
+	}
+	return parsed, nil
+}
+
+// parseUrnV1 is the v1-grammar parser (spec 021). See ParseUrn for the v2
+// delegation wrapper.
+func parseUrnV1(input string) (ParsedURN, error) {
 	if locPrefixRe.MatchString(input) {
 		return ParsedURN{}, &ParseError{Input: input, Reason: ReasonLocSegmentRejected}
 	}
