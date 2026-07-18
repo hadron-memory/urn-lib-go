@@ -12,14 +12,23 @@ type LegacyParsedURN struct {
 	Value string `json:"value"`
 }
 
-var legacyURNRe = regexp.MustCompile(`^(?:hrn|urn):(org|memory|agent|app|node|edge|user):(.+)$`)
+// `mem` is the grammar-v2 type word for a memory (v1 `memory` -> v2 `mem`, the
+// #697 emission flip). Accepted on input so a v2-emitted hrn:mem:... reference
+// round-trips; `memory` stays accepted forever (#239). The `mem` alias is
+// canonicalized to `memory` on parse so every `type == "memory"` consumer works.
+var legacyURNRe = regexp.MustCompile(`^(?:hrn|urn):(org|memory|mem|agent|app|node|edge|user):(.+)$`)
 var locRe = regexp.MustCompile(`^loc:(.+)$`)
 
 // ParseUrnInput strips the hrn:/urn:<type>: or loc: prefix and returns the type
-// and bare value. Unprefixed inputs are returned as type "unknown".
+// and bare value. The v2 `mem` type word is normalized to `memory`. Unprefixed
+// inputs are returned as type "unknown".
 func ParseUrnInput(input string) LegacyParsedURN {
 	if m := legacyURNRe.FindStringSubmatch(input); m != nil {
-		return LegacyParsedURN{Type: m[1], Value: m[2]}
+		t := m[1]
+		if t == "mem" {
+			t = "memory"
+		}
+		return LegacyParsedURN{Type: t, Value: m[2]}
 	}
 	if m := locRe.FindStringSubmatch(input); m != nil {
 		return LegacyParsedURN{Type: "loc", Value: m[1]}

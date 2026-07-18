@@ -75,7 +75,10 @@ func AssertFullyQualifiedUrn(input, expectedType string) error {
 
 	if prefixType != "" && prefixType != expectedType {
 		isNodeRoleAlias := expectedType == "node" && nodeRoleAliases[prefixType]
-		if !isNodeRoleAlias {
+		// The grammar-v2 `mem` type word aliases `memory` at the boundary (#697
+		// emission flip), so a v2-emitted hrn:mem:root:slug qualifies as a memory.
+		isMemoryAlias := expectedType == "memory" && prefixType == "mem"
+		if !isNodeRoleAlias && !isMemoryAlias {
 			return &NotQualifiedError{input, expectedType}
 		}
 	}

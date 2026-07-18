@@ -19,6 +19,11 @@ const (
 	LegacyScheme    = "urn"
 )
 
+// MaxAtomLen is the maximum length of a single URN atom / slug, in bytes (spec
+// cor:urn:010:01, FR-017). Exported as the single source of truth so lib
+// internals and server-side minters stop re-typing the bare literal 64 (#715).
+const MaxAtomLen = 64
+
 var schemePrefixRe = regexp.MustCompile(`^(?:hrn|urn):`)
 
 // HasSchemePrefix reports whether input leads with a scheme prefix.
@@ -87,7 +92,7 @@ func ValidateAtomShape(input, atom string) error {
 	if len(atom) == 0 {
 		return &ParseError{Input: input, Reason: ReasonInvalidSegmentShape, OffendingSegment: atom}
 	}
-	if len(atom) > 64 {
+	if len(atom) > MaxAtomLen {
 		return &ParseError{Input: input, Reason: ReasonSlugTooLong, OffendingSegment: atom}
 	}
 	if !atomRe.MatchString(atom) {
@@ -150,11 +155,18 @@ func DeriveSlugFromName(name string) (string, error) {
 	slug := strings.ToLower(strings.TrimSpace(name))
 	slug = nonAtomRe.ReplaceAllString(slug, "-")
 	slug = strings.Trim(slug, "._-")
-	if len(slug) > 64 {
-		slug = strings.TrimRight(slug[:64], "._-")
+	if len(slug) > MaxAtomLen {
+		slug = strings.TrimRight(slug[:MaxAtomLen], "._-")
 	}
 	if slug == "" {
 		return "", &ParseError{Input: name, Reason: ReasonEmptyDerivedSlug, OffendingSegment: name}
 	}
 	return slug, nil
+}
+
+// IsValidSlug is the boolean form of ValidateUserSlug: true when slug is a legal
+// NEW entity slug (charset + length + reserved-word + lowercase), false on any
+// violation. Convenience predicate for callers that don't want an error (#715).
+func IsValidSlug(slug string) bool {
+	return ValidateUserSlug(slug) == nil
 }
