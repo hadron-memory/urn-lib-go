@@ -1,8 +1,8 @@
 {
   "_meta": {
-    "corpusVersion": 9,
+    "corpusVersion": 10,
     "grammar": "v1-parity",
-    "note": "Language-agnostic conformance corpus. Every urn-lib implementation (js, go, ...) MUST run these. Each case: {fn, in:[args], out?:value, throws?:reasonCode}. `out` present = expected return; `throws` present = expected UrnParseError.reason; neither = void call that must not throw. This is the CONTRACT; ported from hadron-server src/lib/urn.ts. Grammar-v2 cases (flat forms, apprun, #data) are present from v4/v5 onward (see below). v2 adds the hadron-server parser golden-set (parser-golden-set.json) \u2014 the authoritative parseUrn suite incl. spec-047 @handle, D11 cats, role markers, R2 installs. v3 adds the secret URN type (#684/#679): owner-scoped shape, user:handle->@handle root rewrite, app:/memory: marker validation. v4 adds the display-chip parser (#1): parseDisplayUrn splits a displayable URN into {type, bareValue, fullUrn}, accepts legacy urn: input, emits canonical hrn:, preserves the full post-kind bareValue, supports a type hint, and falls back to unknown for unregistered display kinds. v4 adds grammar-v2 flat forms (#694): parseUrnV2/composeUrnV2/isFlatV2 \u2014 hrn:<type>:<root>[:<seg>...], single colon, no sigil, additive to v1. v5 adds the #696 per-entity v2 shapes (D-2026-07-15-006): secret org/user-only (exactly one name atom, app/memory markers rejected), apprun (hrn:apprun:<root>:<app>:<run-id>, fixed arity), noderev END-ANCHORED (hrn:noderev:<root>:<mem>:<loc...>:<rev>, last atom = revision id), node/edge opaque-terminal loc, and the #data fragment of a node/apprun parent \u2014 with typed compose helpers (composeSecretUrnV2/composeAppRunUrnV2/composeNodeRevUrnV2/composeDataFragmentV2) and the end-anchored decomposer parseNodeRevUrnV2. v6 tightens the #696 shapes per review: node/edge now REQUIRE their documented <mem>:<loc...> arity (>=2 post-root segments, so a mem-only node/edge and a #data fragment on one are rejected), and composeDataFragmentV2 emits a canonical hrn: URN even when given a legacy urn:-scheme parent. v7 adds the #692 registration-policy validators: validateOrgSlug now requires a dotted root (org-root-not-dotted) and validateUserHandle rejects a dot (handle-has-dot) so org roots and user handles stay charset-disjoint in the shared per-server principal pool \u2014 create/rename rules only; the parse/read path stays lenient (existing undotted orgs / dotted handles still resolve). v8 adds the #697 emission-flip `mem` type-word acceptance: parseUrnInput normalizes the grammar-v2 `mem` word to `memory` (v1 `memory` stays accepted forever), and assertFullyQualifiedUrn treats `mem` as a `memory` alias at the boundary so a v2-emitted hrn:mem:<root>:<slug> round-trips. v9 adds the #697 parseUrn/parseDisplayUrn flat-v2 delegation: a v1-rejected input that is a valid flat grammar-v2 URN of a type with a v1 equivalent (mem->memory, node, edge, org, user, agent, app, asset, secret) is delegated to parseUrnV2 and mapped into the ParsedUrn/ParsedDisplayUrn shape (.type is the mapped v1 word for consumer dispatch; parserCanonical/fullUrn keep the actual v2 type word so the canonical string round-trips); v2 needs no D11 resolver canonicalization. v2-ONLY types (apprun, noderev, ...) keep their v1 unknown-type error. parseDisplayUrn renders hrn:mem:<root>:<slug> under the memory badge.",
+    "note": "Language-agnostic conformance corpus. Every urn-lib implementation (js, go, ...) MUST run these. Each case: {fn, in:[args], out?:value, throws?:reasonCode}. `out` present = expected return; `throws` present = expected UrnParseError.reason; neither = void call that must not throw. This is the CONTRACT; ported from hadron-server src/lib/urn.ts. Grammar-v2 cases (flat forms, apprun, #data) are present from v4/v5 onward (see below). v2 adds the hadron-server parser golden-set (parser-golden-set.json) \u2014 the authoritative parseUrn suite incl. spec-047 @handle, D11 cats, role markers, R2 installs. v3 adds the secret URN type (#684/#679): owner-scoped shape, user:handle->@handle root rewrite, app:/memory: marker validation. v4 adds the display-chip parser (#1): parseDisplayUrn splits a displayable URN into {type, bareValue, fullUrn}, accepts legacy urn: input, emits canonical hrn:, preserves the full post-kind bareValue, supports a type hint, and falls back to unknown for unregistered display kinds. v4 adds grammar-v2 flat forms (#694): parseUrnV2/composeUrnV2/isFlatV2 \u2014 hrn:<type>:<root>[:<seg>...], single colon, no sigil, additive to v1. v5 adds the #696 per-entity v2 shapes (D-2026-07-15-006): secret org/user-only (exactly one name atom, app/memory markers rejected), apprun (hrn:apprun:<root>:<app>:<run-id>, fixed arity), noderev END-ANCHORED (hrn:noderev:<root>:<mem>:<loc...>:<rev>, last atom = revision id), node/edge opaque-terminal loc, and the #data fragment of a node/apprun parent \u2014 with typed compose helpers (composeSecretUrnV2/composeAppRunUrnV2/composeNodeRevUrnV2/composeDataFragmentV2) and the end-anchored decomposer parseNodeRevUrnV2. v6 tightens the #696 shapes per review: node/edge now REQUIRE their documented <mem>:<loc...> arity (>=2 post-root segments, so a mem-only node/edge and a #data fragment on one are rejected), and composeDataFragmentV2 emits a canonical hrn: URN even when given a legacy urn:-scheme parent. v7 adds the #692 registration-policy validators: validateOrgSlug now requires a dotted root (org-root-not-dotted) and validateUserHandle rejects a dot (handle-has-dot) so org roots and user handles stay charset-disjoint in the shared per-server principal pool \u2014 create/rename rules only; the parse/read path stays lenient (existing undotted orgs / dotted handles still resolve). v8 adds the #697 emission-flip `mem` type-word acceptance: parseUrnInput normalizes the grammar-v2 `mem` word to `memory` (v1 `memory` stays accepted forever), and assertFullyQualifiedUrn treats `mem` as a `memory` alias at the boundary so a v2-emitted hrn:mem:<root>:<slug> round-trips. v9 adds the #697 parseUrn/parseDisplayUrn flat-v2 delegation: a v1-rejected input that is a valid flat grammar-v2 URN of a type with a v1 equivalent (mem->memory, node, edge, org, user, agent, app, asset, secret) is delegated to parseUrnV2 and mapped into the ParsedUrn/ParsedDisplayUrn shape (.type is the mapped v1 word for consumer dispatch; parserCanonical/fullUrn keep the actual v2 type word so the canonical string round-trips); v2 needs no D11 resolver canonicalization. v2-ONLY types (apprun, noderev, ...) keep their v1 unknown-type error. parseDisplayUrn renders hrn:mem:<root>:<slug> under the memory badge. v10 adds #710 parseFor grammar-v2 coverage: a NORMALIZED row (urnNormalizedAt set) whose stored urn is flat v2 (mem/node, single colon, incl. a legacy urn: scheme) parses via the v2-delegating parseUrn and is returned unchanged with isLegacy:false (no throw) \u2014 the emission flip repurposes urnNormalizedAt to mark rows normalized onto flat v2; an unnormalized flat-v2 row is still isLegacy:true, and a normalized-but-malformed v2 row (`::` under a v2 type word) still throws.",
     "source": "hadron-server/src/lib/urn.ts"
   },
   "cases": [
@@ -1558,6 +1558,58 @@
         "1"
       ],
       "throws": "malformed-grammar"
+    },
+    {
+      "fn": "parseForRow",
+      "in": [
+        "hrn:mem:acme.com:specs",
+        "1"
+      ],
+      "out": {
+        "canonical": "hrn:mem:acme.com:specs",
+        "isLegacy": false
+      }
+    },
+    {
+      "fn": "parseForRow",
+      "in": [
+        "hrn:node:acme.com:mmdata:review:sort",
+        "1"
+      ],
+      "out": {
+        "canonical": "hrn:node:acme.com:mmdata:review:sort",
+        "isLegacy": false
+      }
+    },
+    {
+      "fn": "parseForRow",
+      "in": [
+        "urn:mem:acme.com:specs",
+        "1"
+      ],
+      "out": {
+        "canonical": "urn:mem:acme.com:specs",
+        "isLegacy": false
+      }
+    },
+    {
+      "fn": "parseForRow",
+      "in": [
+        "hrn:mem:acme.com:specs",
+        ""
+      ],
+      "out": {
+        "canonical": "hrn:mem:acme.com:specs",
+        "isLegacy": true
+      }
+    },
+    {
+      "fn": "parseForRow",
+      "in": [
+        "hrn:mem:acme.com::specs",
+        "1"
+      ],
+      "throws": "unknown-type"
     },
     {
       "fn": "parseUrn",
