@@ -46,6 +46,8 @@ func call(fn string, args []string) (any, error) {
 		return nil, ValidateUserHandle(args[0])
 	case "deriveSlugFromName":
 		return DeriveSlugFromName(args[0])
+	case "isValidSlug":
+		return IsValidSlug(args[0]), nil
 	case "formatUrn":
 		return FormatUrn(args[0], args[1]), nil
 	case "parseUrnInput":
