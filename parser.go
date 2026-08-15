@@ -250,19 +250,29 @@ func tryParseFlatV2(input string) (ParsedURN, bool) {
 	if !ok {
 		return ParsedURN{}, false
 	}
+	// A FRAGMENTED input is declined, not mapped (#994). ParsedURN has no
+	// fragment field, so hrn:node:acme.com:mem:loc#data would come back as
+	// Type "node" with PathSegments describing only the PARENT — the #data
+	// surviving nowhere but inside ParserCanonical. A consumer dispatching on
+	// the documented structured fields would then act on the parent node
+	// instead of its data resource. Under v1 grammar `data` was its own type
+	// word, so this input dispatched distinctly.
+	//
+	// Declining sends it back to the v1 parser's error — a loud failure, what
+	// it did before this delegation existed — rather than silently resolving to
+	// the wrong resource. Mirrors urn-lib-js src/parser.ts.
+	if parsed.Fragment != "" {
+		return ParsedURN{}, false
+	}
 	parserRewrites := []string{}
 	if strings.HasPrefix(input, LegacyScheme+":") {
 		parserRewrites = append(parserRewrites, "legacy-urn-scheme")
 	}
 	pathSegments := append([]string{parsed.Root}, parsed.Segments...)
-	frag := ""
-	if parsed.Fragment != "" {
-		frag = "#" + parsed.Fragment
-	}
 	return ParsedURN{
 		Type:                          mappedType,
 		PathSegments:                  pathSegments,
-		ParserCanonical:               CanonicalScheme + ":" + parsed.Type + ":" + strings.Join(pathSegments, ":") + frag,
+		ParserCanonical:               CanonicalScheme + ":" + parsed.Type + ":" + strings.Join(pathSegments, ":"),
 		InputForm:                     input,
 		ParserRewrites:                parserRewrites,
 		NeedsResolverCanonicalization: false,
