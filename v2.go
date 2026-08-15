@@ -14,6 +14,9 @@ import (
 // Per-entity arity/container semantics (#696, decision D-2026-07-15-006):
 //   secret   hrn:secret:<root>:<name>                 — org/user root + 1 name atom.
 //   apprun   hrn:apprun:<root>:<app>:<run-id>         — fixed 2 segments.
+//   worker   hrn:worker:<root>:<app>:<worker-slug>    — fixed 2 segments. The leaf
+//            is the Worker's DERIVED slug column, never its display name (which
+//            carries no charset constraint) — see cor:agt:020:02.
 //   noderev  hrn:noderev:<root>:<mem>:<loc...>:<rev>  — END-ANCHORED: last atom
 //            is the revision id, first post-root atom is the memory, everything
 //            between is the (variable-length, opaque) node loc.
@@ -25,7 +28,7 @@ import (
 // `data` is demoted to a #fragment and is NOT a type.
 var V2URNTypes = []string{
 	"org", "user", "mem", "agent", "app", "node", "edge", "asset", "secret",
-	"apprun", "noderev", "appkey", "aiconf", "tool", "server", "userapikey",
+	"apprun", "worker", "noderev", "appkey", "aiconf", "tool", "server", "userapikey",
 	"agentschedule", "agentwebhook", "license", "subscription", "usage",
 	"reference", "session", "platform",
 }
@@ -76,7 +79,7 @@ func validateV2Arity(input, typ string, segments []string) error {
 		if len(segments) != 1 {
 			return &ParseError{Input: input, Reason: ReasonInvalidSegmentShape}
 		}
-	case "apprun":
+	case "apprun", "worker":
 		if len(segments) != 2 {
 			return &ParseError{Input: input, Reason: ReasonInvalidSegmentShape}
 		}
@@ -183,6 +186,15 @@ func ComposeSecretUrnV2(root, name string) (string, error) {
 // ComposeAppRunUrnV2 composes hrn:apprun:<root>:<app>:<run-id>.
 func ComposeAppRunUrnV2(root, app, runID string) (string, error) {
 	return ComposeUrnV2("apprun", root, app, runID)
+}
+
+// ComposeWorkerUrnV2 composes hrn:worker:<root>:<app>:<worker-slug> — a Worker,
+// the named casting of an Agent into an App (cor:dmo:050:11). The leaf atom is
+// the Worker's stored `slug` column, DERIVED from its name at cast time and
+// iterated to uniqueness; it is never the display name, which carries no charset
+// constraint and may collide after slugification (cor:agt:020:02).
+func ComposeWorkerUrnV2(root, app, workerSlug string) (string, error) {
+	return ComposeUrnV2("worker", root, app, workerSlug)
 }
 
 // ComposeNodeRevUrnV2 composes hrn:noderev:<root>:<mem>:<loc...>:<rev>. `loc`
