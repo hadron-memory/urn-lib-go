@@ -332,9 +332,38 @@ func ParseUrn(input string) (ParsedURN, error) {
 		if v2, ok := tryParseFlatV2(input); ok {
 			return v2, nil
 		}
+		if fragErr := fragmentOnlyFailure(input); fragErr != nil {
+			return ParsedURN{}, fragErr
+		}
 		return ParsedURN{}, err
 	}
 	return parsed, nil
+}
+
+// fragmentOnlyFailure decides, for a rejected input carrying a #<fragment>,
+// whether the fragment is the ONLY thing wrong with it — and if so returns a
+// ReasonFragmentUnsupported error instead of leaking the v1 parser's (urn-lib-js#11).
+//
+// The v1 grammar has no concept of a fragment, so its complaint is always about
+// the `#` CHARACTER (invalid-charset) or a v2 type word it doesn't know
+// (unknown-type). Both are true internally and both mislead: they describe a
+// symptom of the surface, not the defect in the URN.
+//
+// The discriminator is whether removing the fragment makes the input parse. If
+// it does, the fragment is the whole problem. If it doesn't — hrn:worker:...#data,
+// hrn:apprun:...#data, whose type words have no v1 equivalent at all — the
+// original error stands, because fixing the fragment alone would NOT make the
+// URN parse and reporting it would send the caller down the wrong path.
+func fragmentOnlyFailure(input string) *ParseError {
+	i := strings.Index(input, "#")
+	if i == -1 {
+		return nil
+	}
+	// The core cannot contain a "#", so this never recurses back into this branch.
+	if _, err := ParseUrn(input[:i]); err != nil {
+		return nil // broken with or without its fragment
+	}
+	return &ParseError{Input: input, Reason: ReasonFragmentUnsupported, OffendingSegment: input[i:]}
 }
 
 // parseUrnV1 is the v1-grammar parser (spec 021). See ParseUrn for the v2
