@@ -104,26 +104,74 @@ func AssertFullyQualifiedUrn(input, expectedType string) error {
 	return nil
 }
 
-// NodeURNParts is the result of SplitNodeUrn. JSON tags match the corpus.
+// NodeURNParts is the result of SplitNodeUrn / SplitEdgeUrn. JSON tags match
+// the corpus.
+//
+// Loc is GRAMMAR-NORMALIZED: both hrn:node:acme.com::specs::cor:urn and
+// hrn:node:acme.com:specs:cor:urn yield "cor:urn", so a caller never has to
+// know which grammar it was handed. That is the reason to prefer these
+// decomposers over ParsedURN.PathSegments, which is a RAW split whose shape
+// follows the input grammar (urn-lib-js#12).
 type NodeURNParts struct {
 	MemoryURN string `json:"memoryUrn"`
 	Loc       string `json:"loc"`
+	// Fragment is set only when the input carried a #<fragment> suffix (v2
+	// #data). Omitted otherwise so existing corpus cases keep matching.
+	Fragment string `json:"fragment,omitempty"`
+}
+
+// splitNodeLikeUrn is shared by SplitNodeUrn and SplitEdgeUrn — node and edge
+// have the same <root>::<mem>::<loc...> shape, and an edge loc is an opaque
+// terminal (never re-split into source:target).
+func splitNodeLikeUrn(input, expectedType string) (NodeURNParts, error) {
+	// Strip an optional trailing #<fragment> FIRST (urn-lib-js#13). v2 spells
+	// node-data as a #data fragment of its parent, and the decomposition below
+	// is purely positional — left in place the fragment would ride along into
+	// the terminal atom and produce Loc "cor:urn#data", which is not a loc: no
+	// memory contains it, # is outside the atom charset, and a caller using it
+	// as a lookup key gets a silent miss. The v1 spelling of the same resource
+	// (hrn:data:<root>::<mem>::<loc>) yields a clean loc, so folding the
+	// fragment in would make one resource decompose two different ways.
+	fragment := ""
+	urn := input
+	if i := strings.Index(input, "#"); i != -1 {
+		fragment = input[i+1:]
+		urn = input[:i]
+	}
+
+	if err := AssertFullyQualifiedUrn(urn, expectedType); err != nil {
+		return NodeURNParts{}, err
+	}
+	path := urn
+	if m := qualPrefixStripRe.FindStringSubmatch(urn); m != nil {
+		path = m[1]
+	}
+
+	// v1 hierarchy (`::`) vs flat v2 (single `:`). Both normalize to the same
+	// Loc because the loc is re-joined with ":" either way.
+	var parts []string
+	if strings.Contains(path, "::") {
+		parts = strings.Split(path, "::")
+	} else {
+		parts = strings.Split(path, ":")
+	}
+	return NodeURNParts{
+		MemoryURN: parts[0] + ":" + parts[1],
+		Loc:       strings.Join(parts[2:], ":"),
+		Fragment:  fragment,
+	}, nil
 }
 
 // SplitNodeUrn splits a fully-qualified node URN into its memory URN and loc.
-// Self-validating (AssertFullyQualifiedUrn(input, "node")).
+// Self-validating (AssertFullyQualifiedUrn(input, "node")). A #data fragment is
+// reported separately rather than folded into Loc (urn-lib-js#13).
 func SplitNodeUrn(input string) (NodeURNParts, error) {
-	if err := AssertFullyQualifiedUrn(input, "node"); err != nil {
-		return NodeURNParts{}, err
-	}
-	path := input
-	if m := qualPrefixStripRe.FindStringSubmatch(input); m != nil {
-		path = m[1]
-	}
-	if strings.Contains(path, "::") {
-		segments := strings.Split(path, "::")
-		return NodeURNParts{MemoryURN: segments[0] + ":" + segments[1], Loc: strings.Join(segments[2:], ":")}, nil
-	}
-	atoms := strings.Split(path, ":")
-	return NodeURNParts{MemoryURN: atoms[0] + ":" + atoms[1], Loc: strings.Join(atoms[2:], ":")}, nil
+	return splitNodeLikeUrn(input, "node")
+}
+
+// SplitEdgeUrn splits a fully-qualified edge URN into its memory URN and loc
+// (urn-lib-js#12). Same shape as SplitNodeUrn — the edge loc is an OPAQUE
+// terminal and is never re-split into source:target.
+func SplitEdgeUrn(input string) (NodeURNParts, error) {
+	return splitNodeLikeUrn(input, "edge")
 }
