@@ -235,12 +235,40 @@ var v2ToV1Type = map[string]string{
 	"node": "node", "edge": "edge", "asset": "asset", "secret": "secret",
 }
 
+// v2FragmentToV1Type maps grammar-v2 fragment words to their v1 canonical TYPE
+// word (urn-lib-js#8).
+//
+// v2 demoted the v1 node-PART type words — the registry's NodeParts, i.e. `data`
+// and `condition` — from standalone types to `#<part>` fragments hanging off the
+// parent node (#696). The demotion changed the SPELLING, not the meaning: v1's
+// hrn:data:<root>::<mem>::<loc> and v2's hrn:node:<root>:<mem>:<loc>#data name
+// the same resource, and v1's data URN carries exactly the parent node's path —
+// only its type word differs. So the fragment maps back onto its v1 type word
+// for Type dispatch, precisely as `mem` maps onto `memory` above.
+//
+// This is what makes the delegation SAFE for fragmented input: a consumer
+// switching on Type lands in the "data" arm it has always had for the v1
+// spelling, instead of the parent's "node" arm (the #994 harm). Derived from
+// NodeParts so the two registries cannot drift. Mirrors urn-lib-js src/parser.ts.
+var v2FragmentToV1Type = func() map[string]string {
+	m := make(map[string]string, len(NodeParts))
+	for _, part := range NodeParts {
+		m[part] = part
+	}
+	return m
+}()
+
 // tryParseFlatV2 delegates a v1-rejected input to the grammar-v2 flat parser
 // (#697). Returns (parsed, true) when input is a flat-v2 URN of a type with a v1
 // equivalent, else (_, false) so ParseUrn rethrows the original v1 error. Type
 // is the mapped v1 word (for consumer switch dispatch) while ParserCanonical
 // keeps the actual v2 type word so the canonical string round-trips. v2 is
 // already flat/pool-rooted, so no D11 resolver canonicalization applies.
+//
+// A FRAGMENTED input maps its fragment onto the fragment's v1 type word
+// (urn-lib-js#8): hrn:node:<root>:<mem>:<loc>#data parses as Type "data" over
+// the same path, which is exactly the v1 hrn:data:<root>::<mem>::<loc> reading.
+// The fragment stays in ParserCanonical so the canonical string round-trips.
 func tryParseFlatV2(input string) (ParsedURN, bool) {
 	parsed, err := ParseUrnV2(input)
 	if err != nil {
@@ -250,29 +278,42 @@ func tryParseFlatV2(input string) (ParsedURN, bool) {
 	if !ok {
 		return ParsedURN{}, false
 	}
-	// A FRAGMENTED input is declined, not mapped (#994). ParsedURN has no
-	// fragment field, so hrn:node:acme.com:mem:loc#data would come back as
-	// Type "node" with PathSegments describing only the PARENT — the #data
-	// surviving nowhere but inside ParserCanonical. A consumer dispatching on
-	// the documented structured fields would then act on the parent node
-	// instead of its data resource. Under v1 grammar `data` was its own type
-	// word, so this input dispatched distinctly.
+
+	// Resolve the effective v1 type word. For a fragmented input that is the
+	// FRAGMENT's v1 type word, not the parent's: v2 spells node-data as a #data
+	// fragment of its node, v1 spelled it as the `data` type over the same path,
+	// and both name the same resource (#696 demoted the type word to a fragment).
 	//
-	// Declining sends it back to the v1 parser's error — a loud failure, what
-	// it did before this delegation existed — rather than silently resolving to
-	// the wrong resource. Mirrors urn-lib-js src/parser.ts.
+	// Mapping it this way is what keeps the delegation from re-introducing #994:
+	// reporting Type "node" here would send a consumer dispatching on the
+	// structured fields to the PARENT node instead of its data resource. With the
+	// fragment mapped, that consumer lands in the same "data" arm it has always
+	// had for the v1 spelling. A fragment with no v1 type word (none today —
+	// v2Fragments is {data}) is declined rather than silently flattened.
+	//
+	// A fragment on a v2-ONLY parent (hrn:apprun:...#data) never reaches here:
+	// its parent type has no v2ToV1Type entry, so it keeps its v1 unknown-type
+	// error like every other v2-only type.
+	typ := mappedType
+	fragmentSuffix := ""
 	if parsed.Fragment != "" {
-		return ParsedURN{}, false
+		fragmentType, ok := v2FragmentToV1Type[parsed.Fragment]
+		if !ok {
+			return ParsedURN{}, false
+		}
+		typ = fragmentType
+		fragmentSuffix = "#" + parsed.Fragment
 	}
+
 	parserRewrites := []string{}
 	if strings.HasPrefix(input, LegacyScheme+":") {
 		parserRewrites = append(parserRewrites, "legacy-urn-scheme")
 	}
 	pathSegments := append([]string{parsed.Root}, parsed.Segments...)
 	return ParsedURN{
-		Type:                          mappedType,
+		Type:                          typ,
 		PathSegments:                  pathSegments,
-		ParserCanonical:               CanonicalScheme + ":" + parsed.Type + ":" + strings.Join(pathSegments, ":"),
+		ParserCanonical:               CanonicalScheme + ":" + parsed.Type + ":" + strings.Join(pathSegments, ":") + fragmentSuffix,
 		InputForm:                     input,
 		ParserRewrites:                parserRewrites,
 		NeedsResolverCanonicalization: false,
