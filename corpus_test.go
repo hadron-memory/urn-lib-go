@@ -70,6 +70,8 @@ func call(fn string, args []string) (any, error) {
 		return nil, AssertFullyQualifiedUrn(args[0], args[1])
 	case "splitNodeUrn":
 		return SplitNodeUrn(args[0])
+	case "splitEdgeUrn":
+		return SplitEdgeUrn(args[0])
 	case "composeInstalledAgentUrn":
 		return ComposeInstalledAgentUrn(args[0], args[1])
 	case "parseForRow":

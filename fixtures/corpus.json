@@ -1,8 +1,8 @@
 {
   "_meta": {
-    "corpusVersion": 13,
+    "corpusVersion": 15,
     "grammar": "v1-parity",
-    "note": "Language-agnostic conformance corpus. Every urn-lib implementation (js, go, ...) MUST run these. Each case: {fn, in:[args], out?:value, throws?:reasonCode}. `out` present = expected return; `throws` present = expected UrnParseError.reason; neither = void call that must not throw. This is the CONTRACT; ported from hadron-server src/lib/urn.ts. Grammar-v2 cases (flat forms, apprun, #data) are present from v4/v5 onward (see below). v2 adds the hadron-server parser golden-set (parser-golden-set.json) — the authoritative parseUrn suite incl. spec-047 @handle, D11 cats, role markers, R2 installs. v3 adds the secret URN type (#684/#679): owner-scoped shape, user:handle->@handle root rewrite, app:/memory: marker validation. v4 adds the display-chip parser (#1): parseDisplayUrn splits a displayable URN into {type, bareValue, fullUrn}, accepts legacy urn: input, emits canonical hrn:, preserves the full post-kind bareValue, supports a type hint, and falls back to unknown for unregistered display kinds. v4 adds grammar-v2 flat forms (#694): parseUrnV2/composeUrnV2/isFlatV2 — hrn:<type>:<root>[:<seg>...], single colon, no sigil, additive to v1. v5 adds the #696 per-entity v2 shapes (D-2026-07-15-006): secret org/user-only (exactly one name atom, app/memory markers rejected), apprun (hrn:apprun:<root>:<app>:<run-id>, fixed arity), noderev END-ANCHORED (hrn:noderev:<root>:<mem>:<loc...>:<rev>, last atom = revision id), node/edge opaque-terminal loc, and the #data fragment of a node/apprun parent — with typed compose helpers (composeSecretUrnV2/composeAppRunUrnV2/composeNodeRevUrnV2/composeDataFragmentV2) and the end-anchored decomposer parseNodeRevUrnV2. v6 tightens the #696 shapes per review: node/edge now REQUIRE their documented <mem>:<loc...> arity (>=2 post-root segments, so a mem-only node/edge and a #data fragment on one are rejected), and composeDataFragmentV2 emits a canonical hrn: URN even when given a legacy urn:-scheme parent. v7 adds the #692 registration-policy validators: validateOrgSlug now requires a dotted root (org-root-not-dotted) and validateUserHandle rejects a dot (handle-has-dot) so org roots and user handles stay charset-disjoint in the shared per-server principal pool — create/rename rules only; the parse/read path stays lenient (existing undotted orgs / dotted handles still resolve). v8 adds the #697 emission-flip `mem` type-word acceptance: parseUrnInput normalizes the grammar-v2 `mem` word to `memory` (v1 `memory` stays accepted forever), and assertFullyQualifiedUrn treats `mem` as a `memory` alias at the boundary so a v2-emitted hrn:mem:<root>:<slug> round-trips. v9 adds the #697 parseUrn/parseDisplayUrn flat-v2 delegation: a v1-rejected input that is a valid flat grammar-v2 URN of a type with a v1 equivalent (mem->memory, node, edge, org, user, agent, app, asset, secret) is delegated to parseUrnV2 and mapped into the ParsedUrn/ParsedDisplayUrn shape (.type is the mapped v1 word for consumer dispatch; parserCanonical/fullUrn keep the actual v2 type word so the canonical string round-trips); v2 needs no D11 resolver canonicalization. v2-ONLY types (apprun, noderev, ...) keep their v1 unknown-type error. parseDisplayUrn renders hrn:mem:<root>:<slug> under the memory badge. v10 adds #710 parseFor grammar-v2 coverage: a NORMALIZED row (urnNormalizedAt set) whose stored urn is flat v2 (mem/node, single colon, incl. a legacy urn: scheme) parses via the v2-delegating parseUrn and is returned unchanged with isLegacy:false (no throw) — the emission flip repurposes urnNormalizedAt to mark rows normalized onto flat v2; an unnormalized flat-v2 row is still isLegacy:true, and a normalized-but-malformed v2 row (`::` under a v2 type word) still throws. v10 also adds #715: the grammar exports MAX_ATOM_LEN (the 64-char atom cap, single source of truth for lib internals + server minters) and isValidSlug (boolean form of validateUserSlug) — the isValidSlug cases (incl. a 64-char pass / 65-char fail) also pin MAX_ATOM_LEN's value cross-language. v11 adds the `worker` URN type (hadron-server#991): hrn:worker:<root>:<app>:<worker-slug>, a FIXED-2-segment container-scoped shape sharing apprun's arity. The leaf atom is the Worker's stored, DERIVED slug column - never its display name, which carries no charset constraint and may collide after slugification (cor:agt:020:02). Cases pin the arity both ways (under- and over-length segment lists), the composeWorkerUrnV2 helper, isFlatV2 round-trip, the v1 parseUrn unknown-type rejection every v2-ONLY type keeps, and the refusal of a #data fragment on a worker (only node/apprun parent a fragment). parseDisplayUrn renders the worker badge. v12 fixes hadron-server#994: parseUrn's flat-v2 delegation DECLINES a fragmented input rather than mapping it. ParsedUrn carries no fragment field, so hrn:node:<root>:<mem>:<loc>#data was returned as type node with pathSegments describing only the PARENT, the #data surviving nowhere but inside parserCanonical - so a consumer dispatching on the structured fields acted on the parent node instead of its data resource (under v1, `data` was its own type word and dispatched distinctly). Declining returns it to the v1 parser's error (invalid-charset: `#` is outside the v1 charset), which is what it did before the v9 delegation landed. Unfragmented v2 inputs are unaffected, and parseDisplayUrn is unaffected (it does not use this path, and its fullUrn preserving the fragment is correct for a chip). v13 supersedes that decline (urn-lib-js#8): a fragmented flat-v2 input now maps its FRAGMENT onto the fragment's v1 TYPE word, so hrn:node:<root>:<mem>:<loc>#data parses as type `data` over the parent's path - which is exactly the v1 hrn:data:<root>::<mem>::<loc> reading of the same resource (v2 demoted the NODE_PARTS type words `data`/`condition` to #fragments in #696; the demotion changed the spelling, not the meaning). This fixes #994's misdispatch properly rather than only loudly: a consumer switching on .type lands in the `case data` arm it has always had for the v1 spelling instead of the parent's `case node` arm, ParsedUrn gains no field, and parserCanonical carries the fragment again so the canonical string round-trips (isParserCanonical/toParserCanonical/parseFor on a #data URN all work). A fragment on a v2-ONLY parent (apprun, worker) keeps its v1 unknown-type error, a non-fragment-parent type (mem, edge) and an unregistered fragment word are still declined to the v1 error.",
+    "note": "Language-agnostic conformance corpus. Every urn-lib implementation (js, go, ...) MUST run these. Each case: {fn, in:[args], out?:value, throws?:reasonCode}. `out` present = expected return; `throws` present = expected UrnParseError.reason; neither = void call that must not throw. This is the CONTRACT; ported from hadron-server src/lib/urn.ts. Grammar-v2 cases (flat forms, apprun, #data) are present from v4/v5 onward (see below). v2 adds the hadron-server parser golden-set (parser-golden-set.json) — the authoritative parseUrn suite incl. spec-047 @handle, D11 cats, role markers, R2 installs. v3 adds the secret URN type (#684/#679): owner-scoped shape, user:handle->@handle root rewrite, app:/memory: marker validation. v4 adds the display-chip parser (#1): parseDisplayUrn splits a displayable URN into {type, bareValue, fullUrn}, accepts legacy urn: input, emits canonical hrn:, preserves the full post-kind bareValue, supports a type hint, and falls back to unknown for unregistered display kinds. v4 adds grammar-v2 flat forms (#694): parseUrnV2/composeUrnV2/isFlatV2 — hrn:<type>:<root>[:<seg>...], single colon, no sigil, additive to v1. v5 adds the #696 per-entity v2 shapes (D-2026-07-15-006): secret org/user-only (exactly one name atom, app/memory markers rejected), apprun (hrn:apprun:<root>:<app>:<run-id>, fixed arity), noderev END-ANCHORED (hrn:noderev:<root>:<mem>:<loc...>:<rev>, last atom = revision id), node/edge opaque-terminal loc, and the #data fragment of a node/apprun parent — with typed compose helpers (composeSecretUrnV2/composeAppRunUrnV2/composeNodeRevUrnV2/composeDataFragmentV2) and the end-anchored decomposer parseNodeRevUrnV2. v6 tightens the #696 shapes per review: node/edge now REQUIRE their documented <mem>:<loc...> arity (>=2 post-root segments, so a mem-only node/edge and a #data fragment on one are rejected), and composeDataFragmentV2 emits a canonical hrn: URN even when given a legacy urn:-scheme parent. v7 adds the #692 registration-policy validators: validateOrgSlug now requires a dotted root (org-root-not-dotted) and validateUserHandle rejects a dot (handle-has-dot) so org roots and user handles stay charset-disjoint in the shared per-server principal pool — create/rename rules only; the parse/read path stays lenient (existing undotted orgs / dotted handles still resolve). v8 adds the #697 emission-flip `mem` type-word acceptance: parseUrnInput normalizes the grammar-v2 `mem` word to `memory` (v1 `memory` stays accepted forever), and assertFullyQualifiedUrn treats `mem` as a `memory` alias at the boundary so a v2-emitted hrn:mem:<root>:<slug> round-trips. v9 adds the #697 parseUrn/parseDisplayUrn flat-v2 delegation: a v1-rejected input that is a valid flat grammar-v2 URN of a type with a v1 equivalent (mem->memory, node, edge, org, user, agent, app, asset, secret) is delegated to parseUrnV2 and mapped into the ParsedUrn/ParsedDisplayUrn shape (.type is the mapped v1 word for consumer dispatch; parserCanonical/fullUrn keep the actual v2 type word so the canonical string round-trips); v2 needs no D11 resolver canonicalization. v2-ONLY types (apprun, noderev, ...) keep their v1 unknown-type error. parseDisplayUrn renders hrn:mem:<root>:<slug> under the memory badge. v10 adds #710 parseFor grammar-v2 coverage: a NORMALIZED row (urnNormalizedAt set) whose stored urn is flat v2 (mem/node, single colon, incl. a legacy urn: scheme) parses via the v2-delegating parseUrn and is returned unchanged with isLegacy:false (no throw) — the emission flip repurposes urnNormalizedAt to mark rows normalized onto flat v2; an unnormalized flat-v2 row is still isLegacy:true, and a normalized-but-malformed v2 row (`::` under a v2 type word) still throws. v10 also adds #715: the grammar exports MAX_ATOM_LEN (the 64-char atom cap, single source of truth for lib internals + server minters) and isValidSlug (boolean form of validateUserSlug) — the isValidSlug cases (incl. a 64-char pass / 65-char fail) also pin MAX_ATOM_LEN's value cross-language. v11 adds the `worker` URN type (hadron-server#991): hrn:worker:<root>:<app>:<worker-slug>, a FIXED-2-segment container-scoped shape sharing apprun's arity. The leaf atom is the Worker's stored, DERIVED slug column - never its display name, which carries no charset constraint and may collide after slugification (cor:agt:020:02). Cases pin the arity both ways (under- and over-length segment lists), the composeWorkerUrnV2 helper, isFlatV2 round-trip, the v1 parseUrn unknown-type rejection every v2-ONLY type keeps, and the refusal of a #data fragment on a worker (only node/apprun parent a fragment). parseDisplayUrn renders the worker badge. v12 fixes hadron-server#994: parseUrn's flat-v2 delegation DECLINES a fragmented input rather than mapping it. ParsedUrn carries no fragment field, so hrn:node:<root>:<mem>:<loc>#data was returned as type node with pathSegments describing only the PARENT, the #data surviving nowhere but inside parserCanonical - so a consumer dispatching on the structured fields acted on the parent node instead of its data resource (under v1, `data` was its own type word and dispatched distinctly). Declining returns it to the v1 parser's error (invalid-charset: `#` is outside the v1 charset), which is what it did before the v9 delegation landed. Unfragmented v2 inputs are unaffected, and parseDisplayUrn is unaffected (it does not use this path, and its fullUrn preserving the fragment is correct for a chip). v13 supersedes that decline (urn-lib-js#8): a fragmented flat-v2 input now maps its FRAGMENT onto the fragment's v1 TYPE word, so hrn:node:<root>:<mem>:<loc>#data parses as type `data` over the parent's path - which is exactly the v1 hrn:data:<root>::<mem>::<loc> reading of the same resource (v2 demoted the NODE_PARTS type words `data`/`condition` to #fragments in #696; the demotion changed the spelling, not the meaning). This fixes #994's misdispatch properly rather than only loudly: a consumer switching on .type lands in the `case data` arm it has always had for the v1 spelling instead of the parent's `case node` arm, ParsedUrn gains no field, and parserCanonical carries the fragment again so the canonical string round-trips (isParserCanonical/toParserCanonical/parseFor on a #data URN all work). A fragment on a v2-ONLY parent (apprun, worker) keeps its v1 unknown-type error, a non-fragment-parent type (mem, edge) and an unregistered fragment word are still declined to the v1 error. v14 adds the #12/#13 decomposers: splitNodeUrn now strips a trailing #<fragment> and reports it as a separate `fragment` field instead of folding it into the loc (it previously returned loc `cor:urn#data`, which no memory contains - the v1 spelling hrn:data:<root>::<mem>::<loc> of the SAME resource yields a clean loc, so one resource decomposed two ways), and splitEdgeUrn is added with the identical shape (node and edge share <root>::<mem>::<loc...>; an edge loc is an OPAQUE terminal and is never re-split into source:target). Both normalize across grammars - a v1 `::` hierarchy and a flat v2 single-colon URN yield the same loc - which is why these are the supported way to get a loc, rather than indexing ParsedUrn.pathSegments, whose shape follows the input grammar (v1 `::`-split segments may carry an internal `:`; v2 atoms are each their own element). That divergence affects every type whose v1 form permits an internal `:` in a segment: memory (valued role markers like app-user:<id>), node, and edge; org/user/agent/app/secret/asset are identical under both grammars. A generic splitUrn covering memory is NOT possible yet - v2 leaves `mem` arity unconstrained, so hrn:mem:<root>:<a>:<b>:<c> cannot be split into containers vs leaf until the v2 spec pins it (#698). v15 fixes two defects found in review of the v14 decomposers. (1) The v1 memory/loc boundary: a v1 memory may be MULTI-SEGMENT (hrn:node:<org>::<app>::<agent>::<role>::<loc>), and the parser treats only the TERMINAL `::` segment as the unbounded opaque loc - splitNodeUrn had always sliced a fixed two segments as the memory, silently moving the rest of a multi-segment memory path into the loc, and v14 propagated that to splitEdgeUrn. v1 now takes everything before the terminal segment as the memory; flat v2 keeps root+1 atom (v2 pins the memory at exactly one atom after the root), so the two grammars need different rules and still agree on the common 3-part case. (2) Fragment legality: the decomposers stripped any text after the first `#` without checking it, so splitNodeUrn(...#bogus) and splitEdgeUrn(...#data) both succeeded and returned a clean parent loc - more permissive than parseUrn for the same input, despite these being self-validating by contract. The fragment word is now checked against V2_FRAGMENTS and the parent type against FRAGMENT_PARENT_TYPES (node/apprun only) before stripping, so an unregistered word or a fragment on an edge throws UrnNotQualifiedError. Both constants are now exported. The result type is renamed NodeUrnParts -> NodeLikeUrnParts (Go: NodeURNParts -> NodeLikeURNParts) since it is the result of both decomposers.",
     "source": "hadron-server/src/lib/urn.ts"
   },
   "cases": [
@@ -2821,6 +2821,171 @@
         "canonical": "hrn:node:acme.com:mem:loc#data",
         "isLegacy": false
       }
+    },
+    {
+      "fn": "splitNodeUrn",
+      "in": [
+        "hrn:node:acme.com:specs:cor:urn#data"
+      ],
+      "out": {
+        "memoryUrn": "acme.com:specs",
+        "loc": "cor:urn",
+        "fragment": "data"
+      }
+    },
+    {
+      "fn": "splitNodeUrn",
+      "in": [
+        "hrn:node:acme.com::specs::cor:urn#data"
+      ],
+      "out": {
+        "memoryUrn": "acme.com:specs",
+        "loc": "cor:urn",
+        "fragment": "data"
+      }
+    },
+    {
+      "fn": "splitNodeUrn",
+      "in": [
+        "urn:node:acme.com:specs:cor:urn#data"
+      ],
+      "out": {
+        "memoryUrn": "acme.com:specs",
+        "loc": "cor:urn",
+        "fragment": "data"
+      }
+    },
+    {
+      "fn": "splitNodeUrn",
+      "in": [
+        "hrn:node:acme.com::specs::cor:urn"
+      ],
+      "out": {
+        "memoryUrn": "acme.com:specs",
+        "loc": "cor:urn"
+      }
+    },
+    {
+      "fn": "splitNodeUrn",
+      "in": [
+        "hrn:node:acme.com:specs:cor:urn"
+      ],
+      "out": {
+        "memoryUrn": "acme.com:specs",
+        "loc": "cor:urn"
+      }
+    },
+    {
+      "fn": "splitEdgeUrn",
+      "in": [
+        "hrn:edge:acme.com::specs::a:b"
+      ],
+      "out": {
+        "memoryUrn": "acme.com:specs",
+        "loc": "a:b"
+      }
+    },
+    {
+      "fn": "splitEdgeUrn",
+      "in": [
+        "hrn:edge:acme.com:specs:a:b"
+      ],
+      "out": {
+        "memoryUrn": "acme.com:specs",
+        "loc": "a:b"
+      }
+    },
+    {
+      "fn": "splitEdgeUrn",
+      "in": [
+        "urn:edge:acme.com:specs:a:b"
+      ],
+      "out": {
+        "memoryUrn": "acme.com:specs",
+        "loc": "a:b"
+      }
+    },
+    {
+      "fn": "splitEdgeUrn",
+      "in": [
+        "hrn:edge:acme.com:specs:a:b:c"
+      ],
+      "out": {
+        "memoryUrn": "acme.com:specs",
+        "loc": "a:b:c"
+      }
+    },
+    {
+      "fn": "splitEdgeUrn",
+      "in": [
+        "hrn:node:acme.com:specs:cor:urn"
+      ],
+      "throwsQualified": true
+    },
+    {
+      "fn": "splitNodeUrn",
+      "in": [
+        "hrn:edge:acme.com:specs:a:b"
+      ],
+      "throwsQualified": true
+    },
+    {
+      "fn": "splitNodeUrn",
+      "in": [
+        "hrn:node:micromentor.org::coding-app::coding-agent::app-mem::a:b"
+      ],
+      "out": {
+        "memoryUrn": "micromentor.org:coding-app:coding-agent:app-mem",
+        "loc": "a:b"
+      }
+    },
+    {
+      "fn": "splitEdgeUrn",
+      "in": [
+        "hrn:edge:micromentor.org::coding-app::coding-agent::app-mem::a:b"
+      ],
+      "out": {
+        "memoryUrn": "micromentor.org:coding-app:coding-agent:app-mem",
+        "loc": "a:b"
+      }
+    },
+    {
+      "fn": "splitNodeUrn",
+      "in": [
+        "micromentor.org::coding-app::coding-agent::app-user:sb::review:sort"
+      ],
+      "out": {
+        "memoryUrn": "micromentor.org:coding-app:coding-agent:app-user:sb",
+        "loc": "review:sort"
+      }
+    },
+    {
+      "fn": "splitNodeUrn",
+      "in": [
+        "hrn:node:acme.com:specs:loc#bogus"
+      ],
+      "throwsQualified": true
+    },
+    {
+      "fn": "splitNodeUrn",
+      "in": [
+        "hrn:node:acme.com::specs::loc#bogus"
+      ],
+      "throwsQualified": true
+    },
+    {
+      "fn": "splitEdgeUrn",
+      "in": [
+        "hrn:edge:acme.com:specs:a:b#data"
+      ],
+      "throwsQualified": true
+    },
+    {
+      "fn": "splitEdgeUrn",
+      "in": [
+        "hrn:edge:acme.com::specs::a:b#data"
+      ],
+      "throwsQualified": true
     }
   ]
 }
