@@ -7,16 +7,20 @@ import "fmt"
 type Reason string
 
 const (
-	ReasonUnknownType          Reason = "unknown-type"
-	ReasonMalformedGrammar     Reason = "malformed-grammar"
-	ReasonEmptySegment         Reason = "empty-segment"
-	ReasonTrailingDoubleColon  Reason = "trailing-double-colon"
-	ReasonReservedWordSlug     Reason = "reserved-word-slug"
-	ReasonInvalidCharset       Reason = "invalid-charset"
-	ReasonSlugNotLowercase     Reason = "slug-not-lowercase"
-	ReasonSlugTooLong          Reason = "slug-too-long"
-	ReasonLocSegmentRejected   Reason = "loc-segment-rejected"
-	ReasonInvalidSegmentShape  Reason = "invalid-segment-shape"
+	ReasonUnknownType         Reason = "unknown-type"
+	ReasonMalformedGrammar    Reason = "malformed-grammar"
+	ReasonEmptySegment        Reason = "empty-segment"
+	ReasonTrailingDoubleColon Reason = "trailing-double-colon"
+	ReasonReservedWordSlug    Reason = "reserved-word-slug"
+	ReasonInvalidCharset      Reason = "invalid-charset"
+	ReasonSlugNotLowercase    Reason = "slug-not-lowercase"
+	ReasonSlugTooLong         Reason = "slug-too-long"
+	ReasonLocSegmentRejected  Reason = "loc-segment-rejected"
+	ReasonInvalidSegmentShape Reason = "invalid-segment-shape"
+	// ReasonFragmentUnsupported — the URN is valid apart from its #<fragment>
+	// (urn-lib-js#11). Only "#data" is registered, and only a node/apprun URN may
+	// parent it; a v1-grammar URN carries no fragment at all.
+	ReasonFragmentUnsupported  Reason = "fragment-unsupported"
 	ReasonEmptyBareValue       Reason = "empty-bare-value"
 	ReasonAlreadyPrefixedValue Reason = "already-prefixed-bare-value"
 	ReasonOrgUrnNotBare        Reason = "org-urn-not-bare"
