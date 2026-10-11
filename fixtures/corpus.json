@@ -3475,6 +3475,88 @@
         "hrn:agenttask:acme.com:eng-team:01hxtask:extra"
       ],
       "out": false
+    },
+    {
+      "fn": "composeAgentTaskUrnV2",
+      "in": [
+        "hadronmemory.com",
+        "hadron-dev-team",
+        "01a128ff8a4d760c8c0ec60b4759e080"
+      ],
+      "out": "hrn:agenttask:hadronmemory.com:hadron-dev-team:01a128ff8a4d760c8c0ec60b4759e080"
+    },
+    {
+      "fn": "composeUrnV2",
+      "in": [
+        "agenttask",
+        "hadronmemory.com",
+        "hadron-dev-team",
+        "01a128ff8a4d760c8c0ec60b4759e080"
+      ],
+      "out": "hrn:agenttask:hadronmemory.com:hadron-dev-team:01a128ff8a4d760c8c0ec60b4759e080"
+    },
+    {
+      "fn": "parseUrnV2",
+      "in": [
+        "hrn:agenttask:hadronmemory.com:hadron-dev-team:01a128ff8a4d760c8c0ec60b4759e080"
+      ],
+      "out": {
+        "scheme": "hrn",
+        "type": "agenttask",
+        "root": "hadronmemory.com",
+        "segments": [
+          "hadron-dev-team",
+          "01a128ff8a4d760c8c0ec60b4759e080"
+        ]
+      }
+    },
+    {
+      "fn": "isFlatV2",
+      "in": [
+        "hrn:agenttask:hadronmemory.com:hadron-dev-team:01a128ff8a4d760c8c0ec60b4759e080"
+      ],
+      "out": true
+    },
+    {
+      "fn": "composeAgentTaskUrnV2",
+      "in": [
+        "hadronmemory.com",
+        "hadron-dev-team",
+        "cm2v8p9qx0000abc123def456"
+      ],
+      "out": "hrn:agenttask:hadronmemory.com:hadron-dev-team:cm2v8p9qx0000abc123def456"
+    },
+    {
+      "fn": "composeUrnV2",
+      "in": [
+        "agenttask",
+        "hadronmemory.com",
+        "hadron-dev-team",
+        "cm2v8p9qx0000abc123def456"
+      ],
+      "out": "hrn:agenttask:hadronmemory.com:hadron-dev-team:cm2v8p9qx0000abc123def456"
+    },
+    {
+      "fn": "parseUrnV2",
+      "in": [
+        "hrn:agenttask:hadronmemory.com:hadron-dev-team:cm2v8p9qx0000abc123def456"
+      ],
+      "out": {
+        "scheme": "hrn",
+        "type": "agenttask",
+        "root": "hadronmemory.com",
+        "segments": [
+          "hadron-dev-team",
+          "cm2v8p9qx0000abc123def456"
+        ]
+      }
+    },
+    {
+      "fn": "isFlatV2",
+      "in": [
+        "hrn:agenttask:hadronmemory.com:hadron-dev-team:cm2v8p9qx0000abc123def456"
+      ],
+      "out": true
     }
   ]
 }
