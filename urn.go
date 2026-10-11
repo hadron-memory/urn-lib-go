@@ -116,28 +116,36 @@ func ValidateUserSlug(slug string) error {
 	return nil
 }
 
-// ValidateOrgSlug validates an org slug: it must be bare (no scheme prefix, no
-// colon), reuse the shared slug rules, and — for a NEW org root (#692) — be a
-// dotted domain. Create/rename rule only; the parse/read path stays lenient.
-func ValidateOrgSlug(slug string) error {
-	if HasSchemePrefix(slug) || strings.Contains(slug, ":") {
-		return &ParseError{Input: slug, Reason: ReasonOrgUrnNotBare, OffendingSegment: slug}
+var principalRootIDRe = regexp.MustCompile(`^(?:[0-9a-f]{32}|c[a-z0-9]{24})$`)
+
+// validatePrincipalRoot applies registration policy only; parse/compose stay lenient.
+func validatePrincipalRoot(root string) error {
+	lower := strings.ToLower(root)
+	if lower == "hrn" || lower == "urn" {
+		return &ParseError{Input: root, Reason: ReasonReservedWordSlug, OffendingSegment: root}
 	}
-	if err := ValidateUserSlug(slug); err != nil {
+	if err := ValidateUserSlug(root); err != nil {
 		return err
 	}
-	if !strings.Contains(slug, ".") {
-		return &ParseError{Input: slug, Reason: ReasonOrgRootNotDotted, OffendingSegment: slug}
+	if principalRootIDRe.MatchString(root) {
+		return &ParseError{Input: root, Reason: ReasonRootIDShaped, OffendingSegment: root}
 	}
 	return nil
 }
 
-// ValidateUserHandle validates a user handle at create/rename (#692): a
-// ValidateUserSlug slug that must additionally be dot-free, so it stays
-// charset-disjoint from a dotted org root in the shared principal pool.
-// Registration policy, not a parse rule.
+// ValidateOrgSlug validates a new or renamed org root: bare, legal lowercase
+// atom, neither reserved nor ID-shaped. Dotted and undotted names are admitted.
+// Existing URNs remain readable through the lenient parse path.
+func ValidateOrgSlug(slug string) error {
+	if HasSchemePrefix(slug) || strings.Contains(slug, ":") {
+		return &ParseError{Input: slug, Reason: ReasonOrgUrnNotBare, OffendingSegment: slug}
+	}
+	return validatePrincipalRoot(slug)
+}
+
+// ValidateUserHandle validates a new handle: root policy plus the existing dot-free rule.
 func ValidateUserHandle(handle string) error {
-	if err := ValidateUserSlug(handle); err != nil {
+	if err := validatePrincipalRoot(handle); err != nil {
 		return err
 	}
 	if strings.Contains(handle, ".") {

@@ -24,7 +24,7 @@ const (
 	ReasonEmptyBareValue       Reason = "empty-bare-value"
 	ReasonAlreadyPrefixedValue Reason = "already-prefixed-bare-value"
 	ReasonOrgUrnNotBare        Reason = "org-urn-not-bare"
-	ReasonOrgRootNotDotted     Reason = "org-root-not-dotted"
+	ReasonRootIDShaped         Reason = "root-id-shaped"
 	ReasonHandleHasDot         Reason = "handle-has-dot"
 	ReasonEmptyDerivedSlug     Reason = "empty-derived-slug"
 )
