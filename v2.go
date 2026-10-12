@@ -28,7 +28,7 @@ import (
 // `data` is demoted to a #fragment and is NOT a type.
 var V2URNTypes = []string{
 	"org", "user", "mem", "agent", "app", "node", "edge", "asset", "secret",
-	"apprun", "worker", "noderev", "appkey", "aiconf", "tool", "server", "userapikey",
+	"apprun", "worker", "ticker", "agenttask", "noderev", "appkey", "aiconf", "tool", "server", "userapikey",
 	"agentschedule", "agentwebhook", "license", "subscription", "usage",
 	"reference", "session", "platform",
 }
@@ -79,7 +79,7 @@ func validateV2Arity(input, typ string, segments []string) error {
 		if len(segments) != 1 {
 			return &ParseError{Input: input, Reason: ReasonInvalidSegmentShape}
 		}
-	case "apprun", "worker":
+	case "apprun", "worker", "ticker", "agenttask":
 		if len(segments) != 2 {
 			return &ParseError{Input: input, Reason: ReasonInvalidSegmentShape}
 		}
@@ -195,6 +195,16 @@ func ComposeAppRunUrnV2(root, app, runID string) (string, error) {
 // constraint and may collide after slugification (cor:agt:020:02).
 func ComposeWorkerUrnV2(root, app, workerSlug string) (string, error) {
 	return ComposeUrnV2("worker", root, app, workerSlug)
+}
+
+// ComposeTickerUrnV2 composes hrn:ticker:<root>:<app>:<ticker-slug> using the permanent derived slug.
+func ComposeTickerUrnV2(root, app, tickerSlug string) (string, error) {
+	return ComposeUrnV2("ticker", root, app, tickerSlug)
+}
+
+// ComposeAgentTaskUrnV2 composes hrn:agenttask:<root>:<app>:<task-id> using the task's id.
+func ComposeAgentTaskUrnV2(root, app, taskID string) (string, error) {
+	return ComposeUrnV2("agenttask", root, app, taskID)
 }
 
 // ComposeNodeRevUrnV2 composes hrn:noderev:<root>:<mem>:<loc...>:<rev>. `loc`

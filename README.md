@@ -51,6 +51,19 @@ Each case is `{ fn, in, out?, throws? }`; `corpus_test.go` runs every case.
 go test ./...
 ```
 
+## Tickers and agent tasks (grammar v2)
+
+`hrn:ticker:<root>:<app-slug>:<ticker-slug>` and
+`hrn:agenttask:<root>:<app-slug>:<task-id>` each have exactly two segments after
+the root. Use `ComposeTickerUrnV2` with the ticker's permanent derived slug and
+`ComposeAgentTaskUrnV2` with the task's id. Both parse through `ParseUrnV2`,
+render their own display badge, and normalize a legacy `urn:` prefix to `hrn:`.
+They have no v1 equivalent; `ParseUrn` rejects them with `unknown-type`.
+
+Task ids follow the shared URN atom rule (letters/digits, dots, underscores and
+hyphens, at most 64 characters). A 32-hex or cuid id is valid in the task-id
+leaf; root-name registration restrictions do not apply to that leaf.
+
 ## License
 
 MIT © Baragaun, Inc.
