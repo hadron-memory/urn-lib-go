@@ -64,6 +64,17 @@ Task ids follow the shared URN atom rule (letters/digits, dots, underscores and
 hyphens, at most 64 characters). A 32-hex or cuid id is valid in the task-id
 leaf; root-name registration restrictions do not apply to that leaf.
 
+## Root registration policy
+
+`ValidateOrgSlug` admits dotted and undotted organization names. Both it and
+`ValidateUserHandle` reject 32-hex/cuid-shaped roots (`root-id-shaped`) and the
+reserved root words `hrn`/`urn` (`reserved-word-slug`). New handles remain
+dot-free. Bare-name, lowercase, charset and length checks remain in place.
+
+This is create/rename policy. Generic slug validation, URN parsing and
+composition remain lenient so existing stored URNs and ID-shaped task leaves
+still round-trip. The obsolete `org-root-not-dotted` reason is retired.
+
 ## License
 
 MIT © Baragaun, Inc.
