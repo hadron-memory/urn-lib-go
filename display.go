@@ -15,7 +15,7 @@ import (
 // DisplayURNTypes — the visible URN kinds rendered as a typed chip. Narrower
 // than the canonical registry on purpose: a new visible kind must be added here
 // too, or ParseDisplayUrn renders it as hrn:unknown:...
-var DisplayURNTypes = []string{"org", "memory", "agent", "app", "node", "user", "apprun", "worker", "ticker", "agenttask"}
+var DisplayURNTypes = []string{"org", "memory", "agent", "app", "node", "user", "apprun", "worker", "ticker", "agenttask", "action"}
 
 // ParsedDisplayURN is the result of ParseDisplayUrn. JSON tags match the corpus.
 type ParsedDisplayURN struct {

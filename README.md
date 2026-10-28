@@ -51,6 +51,15 @@ Each case is `{ fn, in, out?, throws? }`; `corpus_test.go` runs every case.
 go test ./...
 ```
 
+## Actions (grammar v2)
+
+`hrn:action:<root>:<agent-slug>:<code>` has exactly two segments after the root,
+keyed on the Team Agent (cor:urn:010:01). Use `ComposeActionUrnV2`; it parses
+through `ParseUrnV2`, renders its own `action` display badge and normalizes a
+legacy `urn:` prefix to `hrn:`. The code follows the shared atom rule (a dotted
+code such as `task.finish.open-children` is valid, at most 64 characters). It has
+no v1 equivalent; `ParseUrn` rejects it with `unknown-type`.
+
 ## Tickers and agent tasks (grammar v2)
 
 `hrn:ticker:<root>:<app-slug>:<ticker-slug>` and
