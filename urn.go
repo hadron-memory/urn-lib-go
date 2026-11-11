@@ -119,9 +119,10 @@ func ValidateUserSlug(slug string) error {
 var principalRootIDRe = regexp.MustCompile(`^(?:[0-9a-f]{32}|c[a-z0-9]{24})$`)
 
 // validatePrincipalRoot applies registration policy only; parse/compose stay lenient.
+// `hrn`, `urn` and `server` are reserved roots, case-insensitively (cor:urn:010:01).
 func validatePrincipalRoot(root string) error {
 	lower := strings.ToLower(root)
-	if lower == "hrn" || lower == "urn" {
+	if lower == "hrn" || lower == "urn" || lower == "server" {
 		return &ParseError{Input: root, Reason: ReasonReservedWordSlug, OffendingSegment: root}
 	}
 	if err := ValidateUserSlug(root); err != nil {
