@@ -28,7 +28,7 @@ import (
 // `data` is demoted to a #fragment and is NOT a type.
 var V2URNTypes = []string{
 	"org", "user", "mem", "agent", "app", "node", "edge", "asset", "secret",
-	"apprun", "worker", "ticker", "agenttask", "action", "noderev", "appkey", "aiconf", "tool", "server", "userapikey",
+	"apprun", "worker", "ticker", "agenttask", "action", "appevent", "noderev", "appkey", "aiconf", "tool", "server", "userapikey",
 	"agentschedule", "agentwebhook", "license", "subscription", "usage",
 	"reference", "session", "platform",
 }
@@ -79,7 +79,7 @@ func validateV2Arity(input, typ, root string, segments []string) error {
 		if len(segments) != 1 {
 			return &ParseError{Input: input, Reason: ReasonInvalidSegmentShape}
 		}
-	case "apprun", "worker", "ticker", "agenttask", "action":
+	case "apprun", "worker", "ticker", "agenttask", "action", "appevent":
 		if len(segments) != 2 {
 			return &ParseError{Input: input, Reason: ReasonInvalidSegmentShape}
 		}
@@ -237,6 +237,11 @@ func ComposeTickerUrnV2(root, app, tickerSlug string) (string, error) {
 // ComposeAgentTaskUrnV2 composes hrn:agenttask:<root>:<app>:<task-id> using the task's id.
 func ComposeAgentTaskUrnV2(root, app, taskID string) (string, error) {
 	return ComposeUrnV2("agenttask", root, app, taskID)
+}
+
+// ComposeAppEventUrnV2 composes hrn:appevent:<root>:<app-slug>:<event-id>, an App event-stream row (cor:urn:010:01). v2-only.
+func ComposeAppEventUrnV2(root, appSlug, eventID string) (string, error) {
+	return ComposeUrnV2("appevent", root, appSlug, eventID)
 }
 
 // ComposeActionUrnV2 composes hrn:action:<root>:<agent-slug>:<code>, keyed on the Team Agent (cor:urn:010:01).

@@ -60,6 +60,15 @@ legacy `urn:` prefix to `hrn:`. The code follows the shared atom rule (a dotted
 code such as `task.finish.open-children` is valid, at most 64 characters). It has
 no v1 equivalent; `ParseUrn` rejects it with `unknown-type`.
 
+## App events (grammar v2)
+
+`hrn:appevent:<root>:<app-slug>:<event-id>` has exactly two segments after the root,
+keyed on the App (cor:urn:010:01). Use `ComposeAppEventUrnV2`; it parses through
+`ParseUrnV2`, renders its own `appevent` display badge and normalizes a legacy `urn:`
+prefix to `hrn:`. The event id follows the shared atom rule (at most 64 characters);
+`#data` is refused. It is v2-only and has no v1 equivalent; `ParseUrn` rejects it with
+`unknown-type`.
+
 ## AI service configs (grammar v2)
 
 `hrn:aiconf:<root>:<owner-kind>[:<owner-slug>]:<name>`: the kind word after the
