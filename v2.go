@@ -73,7 +73,7 @@ var v2PrefixRe = regexp.MustCompile(`^(hrn|urn):([a-z][a-z0-9-]*):(.+)$`)
 // validateV2Arity enforces the #696 per-type flat-segment arity. `segments` is
 // everything AFTER the root atom. Only the fixed-shape types constrain arity;
 // node/edge/mem/... keep the leaf-unbounded generic form.
-func validateV2Arity(input, typ string, segments []string) error {
+func validateV2Arity(input, typ, root string, segments []string) error {
 	switch typ {
 	case "secret":
 		if len(segments) != 1 {
@@ -81,6 +81,10 @@ func validateV2Arity(input, typ string, segments []string) error {
 		}
 	case "apprun", "worker", "ticker", "agenttask", "action":
 		if len(segments) != 2 {
+			return &ParseError{Input: input, Reason: ReasonInvalidSegmentShape}
+		}
+	case "aiconf":
+		if !validAiConfShape(root, segments) {
 			return &ParseError{Input: input, Reason: ReasonInvalidSegmentShape}
 		}
 	case "noderev":
@@ -93,6 +97,31 @@ func validateV2Arity(input, typ string, segments []string) error {
 		}
 	}
 	return nil
+}
+
+// v2ReservedRoots are the roots no organisation may take; an aiconf under one
+// is platform-owned and carries only its name (cor:urn:010:01, Holger R2/R3).
+var v2ReservedRoots = map[string]bool{"server": true, "platform": true}
+
+// validAiConfShape reports whether `segments` (everything after the root) is a
+// legal aiconf shape. The kind word decides the arity: `org` takes exactly 2
+// (org:<name>), `app`/`agent` exactly 3 (<kind>:<owner-slug>:<name>), anything
+// else is refused. A HadronServer owner has no URN form, so `server` is refused
+// as a kind. Under a reserved root the type takes exactly ONE part, the name.
+func validAiConfShape(root string, segments []string) bool {
+	if v2ReservedRoots[root] {
+		return len(segments) == 1
+	}
+	if len(segments) == 0 {
+		return false
+	}
+	switch segments[0] {
+	case "org":
+		return len(segments) == 2
+	case "app", "agent":
+		return len(segments) == 3
+	}
+	return false
 }
 
 // ParseUrnV2 parses a STRICT grammar-v2 flat URN. Rejects v1 constructs (the ::
@@ -130,7 +159,7 @@ func ParseUrnV2(input string) (ParsedURNV2, error) {
 	if len(atoms) > 1 {
 		segments = atoms[1:]
 	}
-	if err := validateV2Arity(input, typ, segments); err != nil {
+	if err := validateV2Arity(input, typ, atoms[0], segments); err != nil {
 		return ParsedURNV2{}, err
 	}
 	if fragment != "" && !v2FragmentParentTypes[typ] {
@@ -156,7 +185,7 @@ func ComposeUrnV2(typ, root string, segments ...string) (string, error) {
 	urn := CanonicalScheme + ":" + typ + ":" + strings.Join(all, ":")
 	// Validate arity against the FULL composed URN so a thrown error's Input
 	// reflects what the caller asked for (not a truncated prefix).
-	if err := validateV2Arity(urn, typ, segments); err != nil {
+	if err := validateV2Arity(urn, typ, root, segments); err != nil {
 		return "", err
 	}
 	return urn, nil

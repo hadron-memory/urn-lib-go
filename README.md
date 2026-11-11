@@ -60,6 +60,17 @@ legacy `urn:` prefix to `hrn:`. The code follows the shared atom rule (a dotted
 code such as `task.finish.open-children` is valid, at most 64 characters). It has
 no v1 equivalent; `ParseUrn` rejects it with `unknown-type`.
 
+## AI service configs (grammar v2)
+
+`hrn:aiconf:<root>:<owner-kind>[:<owner-slug>]:<name>`: the kind word after the
+root decides the arity. `org` takes exactly two segments (`hrn:aiconf:acme.com:org:default`),
+`app` and `agent` exactly three (`hrn:aiconf:acme.com:app:mealplan:default`); any
+other kind word is refused as `invalid-segment-shape`, including `server`, because a
+HadronServer owner has no URN form. Under the reserved roots `server` and `platform`
+the type takes exactly one part, the name (`hrn:aiconf:server:default`). Build one
+with `ComposeUrnV2("aiconf", root, ...)`; a name ending in `-` or `_` is refused as an
+invalid atom. Whether the kind matches the config's real owner is resolution, in hadron-server.
+
 ## Tickers and agent tasks (grammar v2)
 
 `hrn:ticker:<root>:<app-slug>:<ticker-slug>` and

@@ -4527,6 +4527,84 @@
         "hrn:aiconf:acme.com:org:default#data"
       ],
       "throws": "invalid-segment-shape"
+    },
+    {
+      "fn": "composeUrnV2",
+      "in": [
+        "aiconf",
+        "acme.com",
+        "org",
+        "default"
+      ],
+      "out": "hrn:aiconf:acme.com:org:default"
+    },
+    {
+      "fn": "composeUrnV2",
+      "in": [
+        "aiconf",
+        "acme.com",
+        "app",
+        "mealplan",
+        "default"
+      ],
+      "out": "hrn:aiconf:acme.com:app:mealplan:default"
+    },
+    {
+      "fn": "composeUrnV2",
+      "in": [
+        "aiconf",
+        "server",
+        "default"
+      ],
+      "out": "hrn:aiconf:server:default"
+    },
+    {
+      "fn": "composeUrnV2",
+      "in": [
+        "aiconf",
+        "acme.com",
+        "org",
+        "x",
+        "y"
+      ],
+      "throws": "invalid-segment-shape"
+    },
+    {
+      "fn": "composeUrnV2",
+      "in": [
+        "aiconf",
+        "acme.com",
+        "app",
+        "x"
+      ],
+      "throws": "invalid-segment-shape"
+    },
+    {
+      "fn": "composeUrnV2",
+      "in": [
+        "aiconf",
+        "acme.com",
+        "server",
+        "default"
+      ],
+      "throws": "invalid-segment-shape"
+    },
+    {
+      "fn": "composeUrnV2",
+      "in": [
+        "aiconf",
+        "server",
+        "org",
+        "x"
+      ],
+      "throws": "invalid-segment-shape"
+    },
+    {
+      "fn": "parseUrnV2",
+      "in": [
+        "hrn:aiconf:acme.com:server:x:y"
+      ],
+      "throws": "invalid-segment-shape"
     }
   ]
 }
