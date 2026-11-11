@@ -99,8 +99,11 @@ func validateV2Arity(input, typ, root string, segments []string) error {
 	return nil
 }
 
-// v2ReservedRoots are the roots no organisation may take; an aiconf under one
+// v2ReservedRoots are the roots the spec reserves (registration-time refusal is
+// a separate follow-up, urn-lib-js#33); an aiconf under one
 // is platform-owned and carries only its name (cor:urn:010:01, Holger R2/R3).
+// Matched case-insensitively so a differently-cased root cannot slip into the
+// ordinary owner-kind arm; owner-kind words stay exact lowercase.
 var v2ReservedRoots = map[string]bool{"server": true, "platform": true}
 
 // validAiConfShape reports whether `segments` (everything after the root) is a
@@ -109,7 +112,7 @@ var v2ReservedRoots = map[string]bool{"server": true, "platform": true}
 // else is refused. A HadronServer owner has no URN form, so `server` is refused
 // as a kind. Under a reserved root the type takes exactly ONE part, the name.
 func validAiConfShape(root string, segments []string) bool {
-	if v2ReservedRoots[root] {
+	if v2ReservedRoots[strings.ToLower(root)] {
 		return len(segments) == 1
 	}
 	if len(segments) == 0 {
