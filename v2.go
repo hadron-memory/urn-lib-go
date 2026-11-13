@@ -28,7 +28,7 @@ import (
 // `data` is demoted to a #fragment and is NOT a type.
 var V2URNTypes = []string{
 	"org", "user", "mem", "agent", "app", "node", "edge", "asset", "secret",
-	"apprun", "worker", "ticker", "agenttask", "action", "appevent", "noderev", "appkey", "aiconf", "tool", "server", "userapikey",
+	"apprun", "worker", "ticker", "agenttask", "action", "appevent", "grant", "noderev", "appkey", "aiconf", "tool", "server", "userapikey",
 	"agentschedule", "agentwebhook", "license", "subscription", "usage",
 	"reference", "session", "platform",
 }
@@ -79,7 +79,7 @@ func validateV2Arity(input, typ, root string, segments []string) error {
 		if len(segments) != 1 {
 			return &ParseError{Input: input, Reason: ReasonInvalidSegmentShape}
 		}
-	case "apprun", "worker", "ticker", "agenttask", "action", "appevent":
+	case "apprun", "worker", "ticker", "agenttask", "action", "appevent", "grant":
 		if len(segments) != 2 {
 			return &ParseError{Input: input, Reason: ReasonInvalidSegmentShape}
 		}
@@ -232,6 +232,12 @@ func ComposeWorkerUrnV2(root, app, workerSlug string) (string, error) {
 // ComposeTickerUrnV2 composes hrn:ticker:<root>:<app>:<ticker-slug> using the permanent derived slug.
 func ComposeTickerUrnV2(root, app, tickerSlug string) (string, error) {
 	return ComposeUrnV2("ticker", root, app, tickerSlug)
+}
+
+// ComposeGrantUrnV2 composes hrn:grant:<root>:<app>:<grant-id> (cor:urn:010:01).
+// The grant id follows the ordinary atom rules; it is not restricted to UUIDs.
+func ComposeGrantUrnV2(root, app, grantID string) (string, error) {
+	return ComposeUrnV2("grant", root, app, grantID)
 }
 
 // ComposeAgentTaskUrnV2 composes hrn:agenttask:<root>:<app>:<task-id> using the task's id.
