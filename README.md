@@ -69,6 +69,19 @@ prefix to `hrn:`. The event id follows the shared atom rule (at most 64 characte
 `#data` is refused. It is v2-only and has no v1 equivalent; `ParseUrn` rejects it with
 `unknown-type`.
 
+## Grants (grammar v2)
+
+`hrn:grant:<root>:<app-slug>:<grant-id>` has exactly two segments after the root,
+keyed on the App (cor:urn:010:01). Use `ComposeGrantUrnV2`; it parses through
+`ParseUrnV2`, renders its own `grant` display badge and normalizes a legacy `urn:`
+prefix to `hrn:`. The grant id follows the ordinary atom charset and length rules
+(at most 64 characters), without a UUID-only restriction; `#data` is refused.
+
+Current behavior: the v1 `ParseUrn` registry does not include `grant`, so it
+returns `unknown-type`. The greenfield-v2-only policy remains Proposed in the
+spec; this records the library's current behavior, not a ruled v1 rejection.
+Org-scoped grants and PrincipalGrant rows are outside this shape.
+
 ## AI service configs (grammar v2)
 
 `hrn:aiconf:<root>:<owner-kind>[:<owner-slug>]:<name>`: the kind word after the
