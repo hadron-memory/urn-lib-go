@@ -93,6 +93,20 @@ the type takes exactly one part, the name (`hrn:aiconf:server:default`). Build o
 with `ComposeUrnV2("aiconf", root, ...)`; a name ending in `-` or `_` is refused as an
 invalid atom. Whether the kind matches the config's real owner is resolution, in hadron-server.
 
+## Secrets (grammar v2)
+
+Two shapes, decided by arity: the flat `hrn:secret:<root>:<name>` (org or user
+root plus one name; `hrn:secret:acme.com:app` is a flat secret named `app`) and the
+App shape `hrn:secret:<root>:app:<app-slug>:<name>` with the literal lowercase
+`app` marker (`APP`, `memory`, `org`, `agent`, `user` there name no shape). Two
+parts, and any other longer form, are `invalid-segment-shape`; slug and name follow
+the ordinary atom rules; a reserved root (`server`, `platform`, any case) never takes
+the App shape. Build with `ComposeSecretUrnV2` / `ComposeAppSecretUrnV2`; tell the
+shapes apart with `ParseSecretUrnV2` (`OwnerKind` `app` with `AppSlug`, or `root`)
+instead of re-deriving the arity. The superseded v1 `::` App/memory spelling
+(`hrn:secret:<root>::<app|memory>:<slug>::<name>`) is refused by `ParseUrn`, never
+normalized; the v1 spellings of the flat shape stay accepted.
+
 ## Tickers and agent tasks (grammar v2)
 
 `hrn:ticker:<root>:<app-slug>:<ticker-slug>` and

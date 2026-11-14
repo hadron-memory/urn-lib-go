@@ -12,8 +12,8 @@ import (
 
 var minHierarchySegments = map[string]int{
 	"org": 1, "memory": 2, "agent": 2, "app": 2, "node": 3, "edge": 3, "user": 1,
-	// secret (#679): owner-dependent depth; the gate checks a minimum, so 2
-	// admits both org/user-owned (2) and app/memory-owned (3).
+	// secret: the v1 `::` form is <root>::<name> (2); the #679 app/memory arm
+	// is refused by the parser (cor:urn:010:01 r81).
 	"secret": 2,
 }
 
@@ -25,7 +25,7 @@ var minSegmentsHint = map[string]string{
 	"node":   `3 hierarchy segments (org::memory::loc, e.g., "acme.com::mmdata::review:sort-imports")`,
 	"edge":   `3 hierarchy segments (org::memory::loc, e.g., "acme.com::mmdata::intro:next")`,
 	"user":   `1 hierarchy segment (the handle, e.g., "holger")`,
-	"secret": `2+ hierarchy segments (owner root :: [app|memory:slug ::] name, e.g., "acme.com::stripe-key" or "acme.com::app:internal-ops::stripe-key")`,
+	"secret": `2 hierarchy segments (owner root :: name, e.g., "acme.com::stripe-key"); an App secret is spelled hrn:secret:<root>:app:<app-slug>:<name>`,
 }
 
 var nodeRoleAliases = map[string]bool{

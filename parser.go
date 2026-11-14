@@ -35,18 +35,16 @@ func rewriteSecretUserRoot(segments []string) []string {
 	return segments
 }
 
-// validateSecretSegments (#679): a secret URN is `<root>::[<app|memory>:<slug>::]<name>`
-// — at most 3 segments; when the middle owner segment is present it MUST be
-// exactly `app:<slug>` or `memory:<slug>`.
+// validateSecretSegments: a v1 `::` secret URN is `<root>::<name>`, at most 2
+// segments. The #679 three-segment `<root>::<app|memory>:<slug>::<name>` arm is
+// REFUSED (cor:urn:010:01 r81 Legacy): it is never normalized into the App shape
+// hrn:secret:<root>:app:<app-slug>:<name>, which only the flat v2 grammar spells.
 func validateSecretSegments(input string, segments []string) error {
 	if len(segments) > 3 {
 		return &ParseError{Input: input, Reason: ReasonInvalidSegmentShape, OffendingSegment: segments[3]}
 	}
 	if len(segments) == 3 {
-		atoms := strings.Split(segments[1], ":")
-		if len(atoms) != 2 || (atoms[0] != "app" && atoms[0] != "memory") {
-			return &ParseError{Input: input, Reason: ReasonInvalidSegmentShape, OffendingSegment: segments[1]}
-		}
+		return &ParseError{Input: input, Reason: ReasonInvalidSegmentShape, OffendingSegment: segments[1]}
 	}
 	return nil
 }

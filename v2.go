@@ -12,7 +12,8 @@ import (
 // v2 shape:  hrn:<type>:<root>[:<segment>...][#<fragment>]  (single colon)
 //
 // Per-entity arity/container semantics (#696, decision D-2026-07-15-006):
-//   secret   hrn:secret:<root>:<name>                 — org/user root + 1 name atom.
+//   secret   hrn:secret:<root>:<name>                 — org/user root + 1 name atom;
+//            hrn:secret:<root>:app:<app-slug>:<name>  — the App shape (literal `app`).
 //   apprun   hrn:apprun:<root>:<app>:<run-id>         — fixed 2 segments.
 //   worker   hrn:worker:<root>:<app>:<worker-slug>    — fixed 2 segments. The leaf
 //            is the Worker's DERIVED slug column, never its display name (which
@@ -76,7 +77,7 @@ var v2PrefixRe = regexp.MustCompile(`^(hrn|urn):([a-z][a-z0-9-]*):(.+)$`)
 func validateV2Arity(input, typ, root string, segments []string) error {
 	switch typ {
 	case "secret":
-		if len(segments) != 1 {
+		if !validSecretShape(root, segments) {
 			return &ParseError{Input: input, Reason: ReasonInvalidSegmentShape}
 		}
 	case "apprun", "worker", "ticker", "agenttask", "action", "appevent", "grant":
@@ -123,6 +124,27 @@ func validAiConfShape(root string, segments []string) bool {
 		return len(segments) == 2
 	case "app", "agent":
 		return len(segments) == 3
+	}
+	return false
+}
+
+// secretAppMarker is the literal middle word of the App secret shape. Exact
+// lowercase, like aiconf's kind words: `APP` names nothing, and `memory`, `org`,
+// `agent` or `user` in that position name no shape either (cor:urn:010:01 r81).
+const secretAppMarker = "app"
+
+// validSecretShape reports whether `segments` (everything after the root) is a
+// legal secret shape. ARITY decides: one part is the flat org/user secret (so a
+// secret named `app` stays flat), exactly three parts led by the literal `app`
+// marker is the App shape <root>:app:<app-slug>:<name>. Two parts, and anything
+// longer that is not the App shape, are refused. The App shape never takes a
+// reserved root (server, platform; any case), which owns no App.
+func validSecretShape(root string, segments []string) bool {
+	switch len(segments) {
+	case 1:
+		return true
+	case 3:
+		return segments[0] == secretAppMarker && !v2ReservedRoots[strings.ToLower(root)]
 	}
 	return false
 }
@@ -213,6 +235,53 @@ func IsFlatV2(input string) bool {
 // ComposeSecretUrnV2 composes hrn:secret:<root>:<name> (org/user root + name).
 func ComposeSecretUrnV2(root, name string) (string, error) {
 	return ComposeUrnV2("secret", root, name)
+}
+
+// ComposeAppSecretUrnV2 composes hrn:secret:<root>:app:<app-slug>:<name>, a
+// secret owned by an App (cor:urn:010:01). It emits the lowercase `app` marker
+// and refuses everything ParseUrnV2 refuses: a reserved root and a malformed
+// slug or name.
+func ComposeAppSecretUrnV2(root, appSlug, name string) (string, error) {
+	return ComposeUrnV2("secret", root, secretAppMarker, appSlug, name)
+}
+
+// SecretOwnerKind says which shape a secret URN has.
+type SecretOwnerKind string
+
+const (
+	// SecretOwnerApp is the App shape hrn:secret:<root>:app:<app-slug>:<name>.
+	SecretOwnerApp SecretOwnerKind = "app"
+	// SecretOwnerRoot is the flat shape hrn:secret:<root>:<name>, owned by the
+	// org or user the root names (the URN alone cannot tell those two apart).
+	SecretOwnerRoot SecretOwnerKind = "root"
+)
+
+// ParsedSecretURNV2 is the typed decomposition of a v2 secret URN, so a
+// consumer never re-derives the arity rule (cor:api:240:01).
+type ParsedSecretURNV2 struct {
+	Scheme    string          `json:"scheme"`
+	Type      string          `json:"type"`
+	Root      string          `json:"root"`
+	OwnerKind SecretOwnerKind `json:"ownerKind"`
+	// AppSlug is present only for the App shape.
+	AppSlug string `json:"appSlug,omitempty"`
+	Name    string `json:"name"`
+}
+
+// ParseSecretUrnV2 parses a hrn:secret URN (either shape) and reports which
+// shape it is. Anything ParseUrnV2 refuses is refused, as is any other type.
+func ParseSecretUrnV2(input string) (ParsedSecretURNV2, error) {
+	p, err := ParseUrnV2(input)
+	if err != nil {
+		return ParsedSecretURNV2{}, err
+	}
+	if p.Type != "secret" || p.Fragment != "" {
+		return ParsedSecretURNV2{}, &ParseError{Input: input, Reason: ReasonInvalidSegmentShape}
+	}
+	if len(p.Segments) == 3 {
+		return ParsedSecretURNV2{Scheme: "hrn", Type: "secret", Root: p.Root, OwnerKind: SecretOwnerApp, AppSlug: p.Segments[1], Name: p.Segments[2]}, nil
+	}
+	return ParsedSecretURNV2{Scheme: "hrn", Type: "secret", Root: p.Root, OwnerKind: SecretOwnerRoot, Name: p.Segments[0]}, nil
 }
 
 // ComposeAppRunUrnV2 composes hrn:apprun:<root>:<app>:<run-id>.
