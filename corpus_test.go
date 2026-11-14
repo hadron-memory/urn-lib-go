@@ -95,6 +95,10 @@ func call(fn string, args []string) (any, error) {
 		return IsFlatV2(args[0]), nil
 	case "composeSecretUrnV2":
 		return ComposeSecretUrnV2(args[0], args[1])
+	case "composeAppSecretUrnV2":
+		return ComposeAppSecretUrnV2(args[0], args[1], args[2])
+	case "parseSecretUrnV2":
+		return ParseSecretUrnV2(args[0])
 	case "composeAppRunUrnV2":
 		return ComposeAppRunUrnV2(args[0], args[1], args[2])
 	case "composeTickerUrnV2":
