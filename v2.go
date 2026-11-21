@@ -314,8 +314,27 @@ func ComposeGrantUrnV2(root, app, grantID string) (string, error) {
 // time from org, App and handle, entirely in lower case — AT3.405 composes as
 // …:at3.405. The handle is task-scoped and permanent (ruling 0065); input
 // matching stays case-insensitive, and ParseUrnV2 keeps leaf atoms verbatim.
+// The fold is ASCII-only (A-Z, via lowerASCII): a non-ASCII character is left
+// as typed and refused by the atom charset. A Unicode fold would compose URNs
+// the charset rule refuses — strings.ToLower folds U+212A (KELVIN SIGN) and
+// U+0130 to plain ASCII — and urn-lib-js answers differently for U+0130, so
+// the corpus pins both inputs as invalid-charset (corpus v25).
 func ComposeAgentTaskUrnV2(root, app, handle string) (string, error) {
-	return ComposeUrnV2("agenttask", root, app, strings.ToLower(handle))
+	return ComposeUrnV2("agenttask", root, app, lowerASCII(handle))
+}
+
+// lowerASCII folds A-Z to a-z and leaves every other byte — including all
+// non-ASCII input, whose UTF-8 bytes are all >= 0x80 — exactly as given. Used
+// for the agent-task handle leaf, where a Unicode-aware fold would change
+// which inputs the atom charset accepts (see ComposeAgentTaskUrnV2).
+func lowerASCII(s string) string {
+	b := []byte(s)
+	for i, c := range b {
+		if 'A' <= c && c <= 'Z' {
+			b[i] = c + 'a' - 'A'
+		}
+	}
+	return string(b)
 }
 
 // ComposeAppEventUrnV2 composes hrn:appevent:<root>:<app-slug>:<event-id>, an App event-stream row (cor:urn:010:01). v2-only.

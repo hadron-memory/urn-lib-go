@@ -124,7 +124,12 @@ and hyphens, at most 64 characters) and are task-scoped and permanent (ruling
 0065). A 32-hex or cuid id is valid in the handle leaf; root-name registration
 restrictions do not apply to that leaf. Parse stays case-insensitive and keeps
 the leaf verbatim; the lower-case form is the composer's emission, not a parse
-normalization.
+normalization. That emission fold is ASCII-only (A–Z): a handle containing a
+non-ASCII character — U+212A (KELVIN SIGN) or U+0130, say — is left as typed
+and refused by the atom charset, exactly as before the ruling and identically
+in urn-lib-js; the shared corpus (v25) pins both inputs as `invalid-charset`.
+A Unicode-aware lower-case would fold both to plain ASCII here while urn-lib-js
+answers differently for U+0130, so the two libraries would disagree.
 
 ## Root registration policy
 
