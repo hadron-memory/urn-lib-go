@@ -110,15 +110,26 @@ normalized; the v1 spellings of the flat shape stay accepted.
 ## Tickers and agent tasks (grammar v2)
 
 `hrn:ticker:<root>:<app-slug>:<ticker-slug>` and
-`hrn:agenttask:<root>:<app-slug>:<task-id>` each have exactly two segments after
+`hrn:agenttask:<root>:<app-slug>:<handle>` each have exactly two segments after
 the root. Use `ComposeTickerUrnV2` with the ticker's permanent derived slug and
-`ComposeAgentTaskUrnV2` with the task's id. Both parse through `ParseUrnV2`,
-render their own display badge, and normalize a legacy `urn:` prefix to `hrn:`.
-They have no v1 equivalent; `ParseUrn` rejects them with `unknown-type`.
+`ComposeAgentTaskUrnV2` with the task's handle, emitted lower case (ruling
+0278): the URN is computed at read time from org, App and handle, entirely in
+lower case, so `AT3.405` composes as `…:at3.405`. Both parse through
+`ParseUrnV2`, render their own display badge, and normalize a legacy `urn:`
+prefix to `hrn:`. They have no v1 equivalent; `ParseUrn` rejects them with
+`unknown-type`.
 
-Task ids follow the shared URN atom rule (letters/digits, dots, underscores and
-hyphens, at most 64 characters). A 32-hex or cuid id is valid in the task-id
-leaf; root-name registration restrictions do not apply to that leaf.
+Task handles follow the shared URN atom rule (letters/digits, dots, underscores
+and hyphens, at most 64 characters) and are task-scoped and permanent (ruling
+0065). A 32-hex or cuid id is valid in the handle leaf; root-name registration
+restrictions do not apply to that leaf. Parse stays case-insensitive and keeps
+the leaf verbatim; the lower-case form is the composer's emission, not a parse
+normalization. That emission fold is ASCII-only (A–Z): a handle containing a
+non-ASCII character — U+212A (KELVIN SIGN) or U+0130, say — is left as typed
+and refused by the atom charset, exactly as before the ruling and identically
+in urn-lib-js; the shared corpus (v25) pins both inputs as `invalid-charset`.
+A Unicode-aware lower-case would fold both to plain ASCII here while urn-lib-js
+answers differently for U+0130, so the two libraries would disagree.
 
 ## Root registration policy
 
