@@ -309,9 +309,13 @@ func ComposeGrantUrnV2(root, app, grantID string) (string, error) {
 	return ComposeUrnV2("grant", root, app, grantID)
 }
 
-// ComposeAgentTaskUrnV2 composes hrn:agenttask:<root>:<app>:<task-id> using the task's id.
-func ComposeAgentTaskUrnV2(root, app, taskID string) (string, error) {
-	return ComposeUrnV2("agenttask", root, app, taskID)
+// ComposeAgentTaskUrnV2 composes hrn:agenttask:<root>:<app>:<handle> using the
+// task's handle, emitted lower case (ruling 0278): the URN is computed at read
+// time from org, App and handle, entirely in lower case — AT3.405 composes as
+// …:at3.405. The handle is task-scoped and permanent (ruling 0065); input
+// matching stays case-insensitive, and ParseUrnV2 keeps leaf atoms verbatim.
+func ComposeAgentTaskUrnV2(root, app, handle string) (string, error) {
+	return ComposeUrnV2("agenttask", root, app, strings.ToLower(handle))
 }
 
 // ComposeAppEventUrnV2 composes hrn:appevent:<root>:<app-slug>:<event-id>, an App event-stream row (cor:urn:010:01). v2-only.
