@@ -51,6 +51,8 @@ Each case is `{ fn, in, out?, throws? }`; `corpus_test.go` runs every case.
 go test ./...
 ```
 
+<a id="actions"></a>
+
 ## Event codes (grammar v2)
 
 `hrn:eventcode:<root>:<agent-slug>:<code>` has exactly two segments after the root,
