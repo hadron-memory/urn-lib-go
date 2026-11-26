@@ -51,14 +51,20 @@ Each case is `{ fn, in, out?, throws? }`; `corpus_test.go` runs every case.
 go test ./...
 ```
 
-## Actions (grammar v2)
+## Event codes (grammar v2)
 
-`hrn:action:<root>:<agent-slug>:<code>` has exactly two segments after the root,
-keyed on the Team Agent (cor:urn:010:01). Use `ComposeActionUrnV2`; it parses
-through `ParseUrnV2`, renders its own `action` display badge and normalizes a
+`hrn:eventcode:<root>:<agent-slug>:<code>` has exactly two segments after the root,
+keyed on the Team Agent (cor:urn:010:01). Use `ComposeEventCodeUrnV2`; it parses
+through `ParseUrnV2`, renders its own `eventcode` display badge and normalizes a
 legacy `urn:` prefix to `hrn:`. The code follows the shared atom rule (a dotted
 code such as `task.finish.open-children` is valid, at most 64 characters). It has
 no v1 equivalent; `ParseUrn` rejects it with `unknown-type`.
+
+The type was called `action` before corpus v26. `hrn:action:…` is never accepted
+or normalized as a legacy spelling of `eventcode`: `action` is no longer a
+registered type (the word stays reserved for grants), so the string is refused
+like any unregistered type word (`unknown-type`; the unknown chip in
+`ParseDisplayUrn`).
 
 ## App events (grammar v2)
 
