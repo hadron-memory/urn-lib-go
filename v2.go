@@ -29,7 +29,7 @@ import (
 // `data` is demoted to a #fragment and is NOT a type.
 var V2URNTypes = []string{
 	"org", "user", "mem", "agent", "app", "node", "edge", "asset", "secret",
-	"apprun", "worker", "ticker", "agenttask", "action", "appevent", "grant", "noderev", "appkey", "aiconf", "tool", "server", "userapikey",
+	"apprun", "worker", "ticker", "agenttask", "eventcode", "appevent", "grant", "noderev", "appkey", "aiconf", "tool", "server", "userapikey",
 	"agentschedule", "agentwebhook", "license", "subscription", "usage",
 	"reference", "session", "platform",
 }
@@ -80,7 +80,7 @@ func validateV2Arity(input, typ, root string, segments []string) error {
 		if !validSecretShape(root, segments) {
 			return &ParseError{Input: input, Reason: ReasonInvalidSegmentShape}
 		}
-	case "apprun", "worker", "ticker", "agenttask", "action", "appevent", "grant":
+	case "apprun", "worker", "ticker", "agenttask", "eventcode", "appevent", "grant":
 		if len(segments) != 2 {
 			return &ParseError{Input: input, Reason: ReasonInvalidSegmentShape}
 		}
@@ -342,9 +342,9 @@ func ComposeAppEventUrnV2(root, appSlug, eventID string) (string, error) {
 	return ComposeUrnV2("appevent", root, appSlug, eventID)
 }
 
-// ComposeActionUrnV2 composes hrn:action:<root>:<agent-slug>:<code>, keyed on the Team Agent (cor:urn:010:01).
-func ComposeActionUrnV2(root, agentSlug, code string) (string, error) {
-	return ComposeUrnV2("action", root, agentSlug, code)
+// ComposeEventCodeUrnV2 composes hrn:eventcode:<root>:<agent-slug>:<code>, keyed on the Team Agent (cor:urn:010:01).
+func ComposeEventCodeUrnV2(root, agentSlug, code string) (string, error) {
+	return ComposeUrnV2("eventcode", root, agentSlug, code)
 }
 
 // ComposeNodeRevUrnV2 composes hrn:noderev:<root>:<mem>:<loc...>:<rev>. `loc`
