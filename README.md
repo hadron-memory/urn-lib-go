@@ -90,6 +90,23 @@ returns `unknown-type`. The greenfield-v2-only policy remains Proposed in the
 spec; this records the library's current behavior, not a ruled v1 rejection.
 Org-scoped grants and PrincipalGrant rows are outside this shape.
 
+## App keys (grammar v2)
+
+`hrn:appkey:<root>:<app-slug>:<key-id>` addresses one credential of an App
+(cor:urn:010:01, App key row; Decided, Holger 2026-11-26, answer A on
+hadron-server#4528). It has exactly two segments after the root, like
+`hrn:grant`. Use `ComposeAppKeyUrnV2` with the key's id; it parses through
+`ParseUrnV2`, renders its own `appkey` display badge, normalizes a legacy
+`urn:` prefix to `hrn:` and refuses a `#data` fragment. The key id follows the
+ordinary atom charset and length rules (at most 64 characters) — the server's
+Prisma default is a cuid and its client extension mints its own ids, so more
+than one shape exists and no id format is matched. The leaf is never the key's
+label, preview or hash; the URN is computed, not stored, so renaming the App
+re-addresses every key. The word `appkey` was already in the v2 type list
+before this release (reserved), so what this change adds is the arity rule,
+the typed composer and the display badge. Current behavior: the v1 `ParseUrn`
+registry does not include `appkey`, so it returns `unknown-type`.
+
 ## AI service configs (grammar v2)
 
 `hrn:aiconf:<root>:<owner-kind>[:<owner-slug>]:<name>`: the kind word after the

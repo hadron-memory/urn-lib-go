@@ -80,7 +80,7 @@ func validateV2Arity(input, typ, root string, segments []string) error {
 		if !validSecretShape(root, segments) {
 			return &ParseError{Input: input, Reason: ReasonInvalidSegmentShape}
 		}
-	case "apprun", "worker", "ticker", "agenttask", "eventcode", "appevent", "grant":
+	case "apprun", "worker", "ticker", "agenttask", "eventcode", "appevent", "grant", "appkey":
 		if len(segments) != 2 {
 			return &ParseError{Input: input, Reason: ReasonInvalidSegmentShape}
 		}
@@ -307,6 +307,16 @@ func ComposeTickerUrnV2(root, app, tickerSlug string) (string, error) {
 // The grant id follows the ordinary atom rules; it is not restricted to UUIDs.
 func ComposeGrantUrnV2(root, app, grantID string) (string, error) {
 	return ComposeUrnV2("grant", root, app, grantID)
+}
+
+// ComposeAppKeyUrnV2 composes hrn:appkey:<root>:<app>:<key-id> (cor:urn:010:01
+// App key row, Decided Holger 2026-11-26, answer A on hadron-server#4528). The
+// leaf is the key's id, never its label, preview or hash; the URN is computed,
+// not stored. The id follows the ordinary atom rules only — the server's Prisma
+// default is a cuid and its client extension mints its own ids, so more than
+// one shape exists and no id format is matched here.
+func ComposeAppKeyUrnV2(root, app, keyID string) (string, error) {
+	return ComposeUrnV2("appkey", root, app, keyID)
 }
 
 // ComposeAgentTaskUrnV2 composes hrn:agenttask:<root>:<app>:<handle> using the
