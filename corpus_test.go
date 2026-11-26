@@ -109,8 +109,8 @@ func call(fn string, args []string) (any, error) {
 		return ComposeGrantUrnV2(args[0], args[1], args[2])
 	case "composeAppEventUrnV2":
 		return ComposeAppEventUrnV2(args[0], args[1], args[2])
-	case "composeActionUrnV2":
-		return ComposeActionUrnV2(args[0], args[1], args[2])
+	case "composeEventCodeUrnV2":
+		return ComposeUrnV2("eventcode", args[0], args[1], args[2])
 	case "composeWorkerUrnV2":
 		return ComposeWorkerUrnV2(args[0], args[1], args[2])
 	case "composeNodeRevUrnV2":
